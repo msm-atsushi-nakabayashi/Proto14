@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useLanguage } from '@/lib/hooks/useLanguage';
-import { ArrowLeft, Upload, FileText, Calculator, Package2, Clock, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Upload, FileText, Clock, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
 interface CustomPartRequest {

@@ -30,7 +30,7 @@ export default function HomePage() {
         <h2 className="text-2xl font-bold mb-4 text-gray-800">{t('quick_start_title')}</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
           {quickStartItems.map((item) => {
-            const IconComponent = Icons[item.icon as keyof typeof Icons] as React.FC<any>;
+            const IconComponent = Icons[item.icon as keyof typeof Icons] as React.FC<React.SVGProps<SVGSVGElement>>;
             return (
               <Link
                 key={item.id}
@@ -98,7 +98,7 @@ export default function HomePage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(project.status)}`}>
-                        {t(`status_${project.status}` as any)}
+                        {t(`status_${project.status}` as keyof typeof t)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

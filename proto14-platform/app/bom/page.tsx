@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useLanguage } from '@/lib/hooks/useLanguage';
 import { generateMockParts } from '@/lib/data/mockData';
-import { ArrowLeft, UploadCloud, FileCheck2, Search, Star, Download } from 'lucide-react';
+import { ArrowLeft, UploadCloud, FileCheck2, Search, Download } from 'lucide-react';
 import Link from 'next/link';
 import { Part } from '@/lib/types';
 

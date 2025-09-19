@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useLanguage } from '@/lib/hooks/useLanguage';
 import { caseStudies, partners, pastSuppliers } from '@/lib/data/mockData';
-import { ArrowLeft, Brain, History, Users, Award, ChevronRight, Star, Building } from 'lucide-react';
+import { ArrowLeft, Brain, History, Users, Award, ChevronRight, Star, Building, Clock } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DesignPage() {
@@ -49,7 +49,7 @@ export default function DesignPage() {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setCurrentView(item.view as any)}
+                  onClick={() => setCurrentView(item.view as 'menu' | 'cases' | 'partners' | 'past')}
                   className="flex items-center justify-between p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow group"
                 >
                   <div className="flex items-center">
@@ -57,7 +57,7 @@ export default function DesignPage() {
                       <IconComponent className="h-8 w-8 text-blue-600" />
                     </div>
                     <span className="ml-4 text-lg font-medium text-gray-700">
-                      {t(item.label as any)}
+                      {t(item.label as keyof typeof t)}
                     </span>
                   </div>
                   <ChevronRight className="h-6 w-6 text-gray-400 group-hover:text-blue-600 transition-colors" />
@@ -171,7 +171,7 @@ export default function DesignPage() {
                     </p>
                     <div className="bg-gray-50 p-3 rounded-md mb-3">
                       <p className="text-sm text-gray-700 italic">
-                        "{getTranslation(supplier.comment)}"
+                        &quot;{getTranslation(supplier.comment)}&quot;
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
                         - {getTranslation(supplier.author)}
