@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-lang-key="page_title">Proto 14 - BOM アップロード</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        /* Tooltip-specific styles */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: max-content;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        /* Ensure Lucide icons are sized correctly */
+        .lucide {
+            width: 20px;
+            height: 20px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+    <div id="app-container" class="flex flex-col min-h-screen">
+        <!-- Header -->
+        <header class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold text-blue-600">Proto 14</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <nav class="hidden md:flex items-center space-x-4">
+                            <a href="#" class="text-gray-500 hover:text-blue-600 tooltip">
+                                <i data-lucide="clipboard-list"></i>
+                                <span class="tooltip-text" data-lang-key="tooltip_parts_list">手配品リスト</span>
+                            </a>
+                            <a href="#" class="text-gray-500 hover:text-blue-600 tooltip">
+                                <i data-lucide="shopping-cart"></i>
+                                <span class="tooltip-text" data-lang-key="tooltip_cart">カート</span>
+                            </a>
+                            <a href="#" class="text-gray-500 hover:text-blue-600 tooltip">
+                                <i data-lucide="history"></i>
+                                <span class="tooltip-text" data-lang-key="tooltip_order_history">注文履歴</span>
+                            </a>
+                            <a href="#" class="text-gray-500 hover:text-blue-600 tooltip">
+                                <i data-lucide="users"></i>
+                                <span class="tooltip-text" data-lang-key="tooltip_suppliers">取引先リスト</span>
+                            </a>
+                            <a href="#" class="text-gray-500 hover:text-blue-600 tooltip">
+                                <i data-lucide="settings"></i>
+                                <span class="tooltip-text" data-lang-key="tooltip_settings">設定</span>
+                            </a>
+                        </nav>
+                        <div class="border-l border-gray-200 pl-4">
+                            <select id="language-switcher" class="block w-full pl-3 pr-8 py-1 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                                <option value="ja">日本語</option>
+                                <option value="en">English</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="mb-6">
+                <button id="back-btn" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
+                    <i data-lucide="arrow-left" class="mr-2 h-4 w-4"></i>
+                    <span data-lang-key="back_button">戻る</span>
+                </button>
+            </div>
+            
+            <!-- Upload View -->
+            <div id="upload-view" class="hidden text-center py-10">
+                <h2 class="text-3xl font-bold mb-4" data-lang-key="upload_title">BOMをアップロードして部品情報を検索</h2>
+                <input type="file" id="file-input" class="hidden" accept=".xlsx,.xls,.csv">
+                <div id="drop-zone" class="mt-8 mx-auto max-w-2xl border-2 border-dashed border-gray-300 rounded-lg p-12 text-center cursor-pointer hover:border-blue-500 bg-white transition-colors">
+                    <div id="drop-zone-prompt">
+                        <i data-lucide="upload-cloud" class="mx-auto h-16 w-16 text-gray-400"></i>
+                        <p class="mt-4 text-gray-500" data-lang-key="upload_instruction">ここにファイルをドラッグ＆ドロップ</p>
+                        <p class="text-sm text-gray-500" data-lang-key="upload_or_click">またはクリックしてファイルを選択</p>
+                        <p class="text-xs text-gray-400 mt-1" data-lang-key="upload_supported_files">対応ファイル: .xlsx, .xls, .csv</p>
+                    </div>
+                     <div id="file-ready-prompt" class="hidden">
+                        <i data-lucide="file-check-2" class="mx-auto h-16 w-16 text-green-500"></i>
+                        <p id="file-name-display" class="mt-4 text-gray-700 font-medium"></p>
+                        <p class="text-sm text-gray-500" data-lang-key="upload_ready_message">準備完了です。下のボタンで開始してください。</p>
+                    </div>
+                </div>
+                <div class="mt-6 text-right max-w-2xl mx-auto">
+                    <button id="process-bom-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <span data-lang-key="process_bom_button">見積開始</span>
+                    </button>
+                </div>
+                <div id="upload-spinner" class="hidden mt-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                    <p class="mt-2 text-sm text-gray-600" data-lang-key="upload_processing">処理中...</p>
+                </div>
+            </div>
+
+            <!-- Results View -->
+            <div id="results-view" class="hidden">
+                <!-- Summary & Charts -->
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
+                        <div class="flex space-x-8">
+                            <div>
+                                <p class="text-sm text-gray-500" data-lang-key="summary_total_price">合計金額</p>
+                                <p id="total-price" class="text-2xl font-bold text-blue-600">¥0</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500" data-lang-key="summary_longest_lead_time">最長納期</p>
+                                <p id="longest-lead-time" class="text-2xl font-bold text-blue-600" data-lang-key="lead_time_days" data-template="{value} 日">0 日</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center p-1 space-x-1 bg-gray-100 rounded-lg">
+                            <button id="show-all-summary-btn" class="px-3 py-1 text-sm rounded-md bg-white shadow" data-lang-key="summary_scope_all">表示中の全件</button>
+                            <button id="show-selected-summary-btn" class="px-3 py-1 text-sm rounded-md text-gray-600" data-lang-key="summary_scope_selected">選択中のみ</button>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap justify-end items-center gap-6">
+                        <div class="text-center">
+                            <div class="w-24 h-24 mx-auto">
+                                <canvas id="part-type-chart" class="cursor-pointer"></canvas>
+                            </div>
+                            <p class="text-xs mt-2 text-gray-600" data-lang-key="chart_part_type">部品種類</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-24 h-24 mx-auto">
+                                <canvas id="match-status-chart" class="cursor-pointer"></canvas>
+                            </div>
+                            <p class="text-xs mt-2 text-gray-600" data-lang-key="chart_match_status">型番マッチ状況</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-24 h-24 mx-auto">
+                                <canvas id="purchase-status-chart" class="cursor-pointer"></canvas>
+                            </div>
+                            <p class="text-xs mt-2 text-gray-600" data-lang-key="chart_purchase_status">購入可能状況</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 text-right">
+                        <button id="clear-filters-btn" class="text-sm text-blue-600 hover:underline" data-lang-key="show_all_parts">全ての部品を表示</button>
+                    </div>
+                </div>
+
+                <!-- Parts Table -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-500">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                                <tr>
+                                    <th scope="col" class="p-4">
+                                        <input type="checkbox" id="select-all-checkbox" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+                                    </th>
+                                    <th scope="col" class="px-6 py-3" data-lang-key="table_header_part_number">型番</th>
+                                    <th scope="col" class="px-6 py-3" data-lang-key="table_header_quantity">数量</th>
+                                    <th scope="col" class="px-6 py-3" data-lang-key="table_header_price">価格</th>
+                                    <th scope="col" class="px-6 py-3" data-lang-key="table_header_lead_time">納期</th>
+                                    <th scope="col" class="px-6 py-3" data-lang-key="table_header_supplier">サプライヤー</th>
+                                </tr>
+                            </thead>
+                            <tbody id="parts-table-body">
+                                <!-- Dynamic rows will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Table Controls -->
+                <div class="flex flex-col sm:flex-row items-center justify-between mt-4 space-y-4 sm:space-y-0">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm text-gray-600" data-lang-key="items_per_page">表示件数:</span>
+                        <select id="items-per-page" class="text-sm border-gray-300 rounded-md">
+                            <option>20</option>
+                            <option>50</option>
+                            <option>100</option>
+                        </select>
+                        <span id="page-info" class="text-sm text-gray-600 ml-4"></span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button id="add-to-list-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <span data-lang-key="add_to_list_button">手配品リストへ追加</span>
+                        </button>
+                         <button id="pdf-export-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <span data-lang-key="export_pdf">PDFで出力</span>
+                        </button>
+                        <button id="prev-page-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span data-lang-key="prev_page">前へ</span>
+                        </button>
+                        <button id="next-page-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span data-lang-key="next_page">次へ</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Re-search Modal -->
+    <div id="research-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900" data-lang-key="modal_research_title">部品の再検索</h3>
+                <div class="mt-2 px-7 py-3">
+                    <div class="text-left mb-4">
+                        <label for="modal-part-number" class="text-sm font-medium text-gray-700" data-lang-key="modal_part_number">型番</label>
+                        <input type="text" id="modal-part-number" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                     <div class="text-left">
+                        <label for="modal-part-name" class="text-sm font-medium text-gray-700" data-lang-key="modal_part_name">部品名</label>
+                        <input type="text" id="modal-part-name" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                </div>
+                <div class="items-center px-4 py-3 space-x-2">
+                    <button id="modal-search-btn" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-auto shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span data-lang-key="modal_search_button">検索</span>
+                    </button>
+                    <button id="modal-close-btn" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-auto shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                        <span data-lang-key="modal_close_button">閉じる</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- I18N (Internationalization) ---
+    const translations = {
+        en: {
+            page_title: "Proto 14 - BOM Upload",
+            tooltip_parts_list: "Arrangement List",
+            tooltip_cart: "Cart",
+            tooltip_order_history: "Order History",
+            tooltip_suppliers: "Suppliers",
+            tooltip_settings: "Settings",
+            back_button: "Back",
+            upload_title: "Upload BOM to Search for Parts",
+            upload_instruction: "Drag & drop your file here",
+            upload_or_click: "or click to select a file",
+            upload_supported_files: "Supported files: .xlsx, .xls, .csv",
+            upload_ready_message: "Ready to go. Start with the button below.",
+            process_bom_button: "Start Quote",
+            upload_processing: "Processing...",
+            summary_total_price: "Total Price",
+            summary_longest_lead_time: "Longest Lead Time",
+            lead_time_days: "{value} Days",
+            summary_scope_all: "All Displayed",
+            summary_scope_selected: "Selected Only",
+            add_to_list_button: "Add to Arrangement List",
+            chart_part_type: "Part Type",
+            chart_match_status: "Match Status",
+            chart_purchase_status: "Purchase Status",
+            show_all_parts: "Show All Parts",
+            table_header_part_number: "Part Number",
+            table_header_quantity: "Quantity",
+            table_header_price: "Price",
+            table_header_lead_time: "Lead Time",
+            table_header_supplier: "Supplier",
+            items_per_page: "Items per page:",
+            export_pdf: "Export as PDF",
+            prev_page: "Previous",
+            next_page: "Next",
+            page_info_template: "Showing {start}-{end} of {total}",
+            modal_research_title: "Re-search Part",
+            modal_part_number: "Part Number",
+            modal_part_name: "Part Name",
+            modal_search_button: "Search",
+            modal_close_button: "Close",
+            part_types: { Electronic: "Electronic", Mechanical: "Mechanical", Fastener: "Fastener" },
+            match_statuses: { Matched: "Matched", "Not Matched": "Not Matched" },
+            purchase_statuses: { Available: "Available", "Back Order": "Back Order", Unavailable: "Unavailable" },
+        },
+        ja: {
+            page_title: "Proto 14 - BOM アップロード",
+            tooltip_parts_list: "手配品リスト",
+            tooltip_cart: "カート",
+            tooltip_order_history: "注文履歴",
+            tooltip_suppliers: "取引先リスト",
+            tooltip_settings: "設定",
+            back_button: "戻る",
+            upload_title: "BOMをアップロードして部品情報を検索",
+            upload_instruction: "ここにファイルをドラッグ＆ドロップ",
+            upload_or_click: "またはクリックしてファイルを選択",
+            upload_supported_files: "対応ファイル: .xlsx, .xls, .csv",
+            upload_ready_message: "準備完了です。下のボタンで開始してください。",
+            process_bom_button: "見積開始",
+            upload_processing: "処理中...",
+            summary_total_price: "合計金額",
+            summary_longest_lead_time: "最長納期",
+            lead_time_days: "{value} 日",
+            summary_scope_all: "表示中の全件",
+            summary_scope_selected: "選択中のみ",
+            add_to_list_button: "手配品リストへ追加",
+            chart_part_type: "部品種類",
+            chart_match_status: "型番マッチ状況",
+            chart_purchase_status: "購入可能状況",
+            show_all_parts: "全ての部品を表示",
+            table_header_part_number: "型番",
+            table_header_quantity: "数量",
+            table_header_price: "価格",
+            table_header_lead_time: "納期",
+            table_header_supplier: "サプライヤー",
+            items_per_page: "表示件数:",
+            export_pdf: "PDFで出力",
+            prev_page: "前へ",
+            next_page: "次へ",
+            page_info_template: "{total}件中 {start}〜{end}件を表示",
+            modal_research_title: "部品の再検索",
+            modal_part_number: "型番",
+            modal_part_name: "部品名",
+            modal_search_button: "検索",
+            modal_close_button: "閉じる",
+            part_types: { Electronic: "電子部品", Mechanical: "機械部品", Fastener: "締結部品" },
+            match_statuses: { Matched: "マッチ", "Not Matched": "不一致" },
+            purchase_statuses: { Available: "購入可能", "Back Order": "取寄せ", Unavailable: "購入不可" },
+        }
+    };
+    
+    let currentLang = 'ja';
+
+    const languageSwitcher = document.getElementById('language-switcher');
+    languageSwitcher.addEventListener('change', (event) => setLanguage(event.target.value));
+
+    function setLanguage(lang) {
+        currentLang = lang;
+        document.documentElement.lang = lang;
+        document.querySelectorAll('[data-lang-key]').forEach(el => {
+            const key = el.getAttribute('data-lang-key');
+            const template = el.getAttribute('data-template');
+            let text = translations[lang][key];
+            if (template && el.textContent) {
+                 const valueMatch = el.textContent.match(/\d+/);
+                 if (valueMatch) {
+                    text = template.replace('{value}', valueMatch[0]);
+                 }
+            }
+            if (text) el.innerText = text;
+        });
+        if (allParts.length > 0) renderApp(); 
+    }
+
+    // --- App State ---
+    let allParts = [];
+    let filteredParts = [];
+    let currentPage = 1;
+    let itemsPerPage = 20;
+    let currentFilter = { type: null, value: null };
+    let charts = {};
+    let selectedFile = null;
+    let selectedPartIds = new Set();
+    let summaryViewMode = 'all'; // 'all' or 'selected'
+
+
+    // --- Mock Data ---
+    const suppliers = ['Fastenal', 'McMaster-Carr', 'Misumi'];
+    const partTypes = ['Electronic', 'Mechanical', 'Fastener'];
+    const matchStatuses = ['Matched', 'Not Matched'];
+    const purchaseStatuses = ['Available', 'Back Order', 'Unavailable'];
+
+    function generateMockData() {
+        return Array.from({ length: 250 }, (_, i) => {
+            const isMatched = Math.random() < 0.85;
+            return {
+                id: i + 1,
+                partNumber: `PN-${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
+                name: `部品名${i + 1}`,
+                quantity: Math.floor(Math.random() * 100) + 1,
+                price: isMatched ? Math.floor(Math.random() * 5000) + 50 : 0,
+                leadTime: isMatched ? Math.floor(Math.random() * 10) + 1 : 0,
+                supplier: isMatched ? suppliers[Math.floor(Math.random() * suppliers.length)] : '-',
+                type: partTypes[Math.floor(Math.random() * partTypes.length)],
+                matchStatus: isMatched ? 'Matched' : 'Not Matched',
+                purchaseStatus: isMatched ? purchaseStatuses[Math.floor(Math.random() * purchaseStatuses.length)] : 'Unavailable',
+            };
+        });
+    }
+
+    // --- UI Elements ---
+    const uploadView = document.getElementById('upload-view');
+    const resultsView = document.getElementById('results-view');
+    const dropZone = document.getElementById('drop-zone');
+    const uploadSpinner = document.getElementById('upload-spinner');
+    const partsTableBody = document.getElementById('parts-table-body');
+    const totalPriceEl = document.getElementById('total-price');
+    const longestLeadTimeEl = document.getElementById('longest-lead-time');
+    const itemsPerPageSelect = document.getElementById('items-per-page');
+    const prevPageBtn = document.getElementById('prev-page-btn');
+    const nextPageBtn = document.getElementById('next-page-btn');
+    const pageInfoEl = document.getElementById('page-info');
+    const clearFiltersBtn = document.getElementById('clear-filters-btn');
+    const pdfExportBtn = document.getElementById('pdf-export-btn');
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    const researchModal = document.getElementById('research-modal');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+    const backBtn = document.getElementById('back-btn');
+    const processBomBtn = document.getElementById('process-bom-btn');
+    const fileInput = document.getElementById('file-input');
+    const dropZonePrompt = document.getElementById('drop-zone-prompt');
+    const fileReadyPrompt = document.getElementById('file-ready-prompt');
+    const fileNameDisplay = document.getElementById('file-name-display');
+    const showAllSummaryBtn = document.getElementById('show-all-summary-btn');
+    const showSelectedSummaryBtn = document.getElementById('show-selected-summary-btn');
+    const addToListBtn = document.getElementById('add-to-list-btn');
+
+    // --- View Management ---
+    let currentView = 'upload';
+
+    function showView(viewName) {
+        uploadView.classList.add('hidden');
+        resultsView.classList.add('hidden');
+        const backBtnContainer = backBtn.parentElement;
+
+        if (viewName === 'upload') {
+            uploadView.classList.remove('hidden');
+            backBtnContainer.classList.add('invisible');
+        } else if (viewName === 'results') {
+            resultsView.classList.remove('hidden');
+            backBtnContainer.classList.remove('invisible');
+        }
+        currentView = viewName;
+    }
+    
+    function resetUploadView() {
+        selectedFile = null;
+        fileInput.value = '';
+        processBomBtn.disabled = true;
+        dropZonePrompt.classList.remove('hidden');
+        fileReadyPrompt.classList.add('hidden');
+        fileNameDisplay.textContent = '';
+        uploadSpinner.classList.add('hidden');
+        processBomBtn.parentElement.classList.remove('hidden');
+        dropZone.classList.remove('hidden');
+    }
+
+    backBtn.addEventListener('click', () => {
+        if (currentView === 'results') {
+            allParts = [];
+            filteredParts = [];
+            currentPage = 1;
+            currentFilter = { type: null, value: null };
+            selectedPartIds.clear();
+            summaryViewMode = 'all';
+            updateSummaryToggleUI();
+            resetUploadView();
+            showView('upload');
+        }
+    });
+
+    // --- File Selection & Upload ---
+    function handleFileSelect(file) {
+        if (!file) return;
+        selectedFile = file;
+        dropZonePrompt.classList.add('hidden');
+        fileNameDisplay.textContent = file.name;
+        fileReadyPrompt.classList.remove('hidden');
+        processBomBtn.disabled = false;
+        dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+    }
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => handleFileSelect(e.target.files[0]));
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('border-blue-500', 'bg-blue-50'); });
+    dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('border-blue-500', 'bg-blue-50'); });
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.dataTransfer?.files.length) {
+            handleFileSelect(e.dataTransfer.files[0]);
+            e.dataTransfer.clearData();
+        }
+    });
+
+    processBomBtn.addEventListener('click', () => {
+        if (selectedFile) {
+            processBomBtn.parentElement.classList.add('hidden');
+            dropZone.classList.add('hidden');
+            uploadSpinner.classList.remove('hidden');
+
+            setTimeout(() => {
+                allParts = generateMockData();
+                showView('results');
+                renderApp();
+            }, 1500);
+        }
+    });
+
+    // --- Chart Logic ---
+    function createDoughnutChart(canvasId, data, labels, filterType) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        if (charts[canvasId]) charts[canvasId].destroy();
+        charts[canvasId] = new Chart(ctx, {
+            type: 'doughnut',
+            data: { labels, datasets: [{ data, backgroundColor: ['#3b82f6', '#ef4444', '#f97316', '#84cc16'], borderWidth: 0, hoverOffset: 4 }] },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '70%',
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${c.label || ''}: ${c.parsed || 0}` } } },
+                onClick: (_, els) => {
+                    if (els.length > 0 && summaryViewMode === 'all') { // Filtering only allowed in 'all' mode
+                        const label = charts[canvasId].data.labels[els[0].index];
+                        const translationKeyMap = {
+                            'part_type': 'part_types',
+                            'match_status': 'match_statuses',
+                            'purchase_status': 'purchase_statuses'
+                        };
+                        const translationKey = translationKeyMap[filterType];
+                        const keyMap = translations[currentLang][translationKey];
+                        
+                        if (keyMap) {
+                            const originalLabel = Object.keys(keyMap).find(key => keyMap[key] === label);
+                            currentFilter = { type: filterType, value: originalLabel };
+                            currentPage = 1;
+                            applyFilterAndRender();
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateCharts(parts) {
+        const counts = { part_type: {}, match_status: {}, purchase_status: {} };
+        partTypes.forEach(t => counts.part_type[t] = 0);
+        matchStatuses.forEach(s => counts.match_status[s] = 0);
+        purchaseStatuses.forEach(p => counts.purchase_status[p] = 0);
+
+        parts.forEach(part => {
+            if (part) {
+                counts.part_type[part.type]++;
+                counts.match_status[part.matchStatus]++;
+                counts.purchase_status[part.purchaseStatus]++;
+            }
+        });
+
+        createDoughnutChart('part-type-chart', Object.values(counts.part_type), Object.values(translations[currentLang].part_types), 'part_type');
+        createDoughnutChart('match-status-chart', Object.values(counts.match_status), Object.values(translations[currentLang].match_statuses), 'match_status');
+        createDoughnutChart('purchase-status-chart', Object.values(counts.purchase_status), Object.values(translations[currentLang].purchase_statuses), 'purchase_status');
+    }
+
+    // --- Table & Rendering Logic ---
+    function renderTable() {
+        partsTableBody.innerHTML = '';
+        const paginatedParts = filteredParts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+        if (!paginatedParts.length) {
+            partsTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-10">${currentLang === 'ja' ? '該当する部品がありません' : 'No parts found'}</td></tr>`;
+        } else {
+            paginatedParts.forEach(part => {
+                const isMismatched = part.matchStatus === 'Not Matched';
+                const row = document.createElement('tr');
+                row.className = `bg-white border-b hover:bg-gray-50 ${isMismatched ? 'bg-red-50 text-red-700' : ''}`;
+                row.innerHTML = `
+                    <td class="w-4 p-4">
+                        <input type="checkbox" class="row-checkbox w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500" data-part-id="${part.id}" ${selectedPartIds.has(part.id) ? 'checked' : ''}>
+                    </td>
+                    <td class="px-6 py-4 font-medium ${isMismatched ? 'text-red-700' : 'text-gray-900'} whitespace-nowrap">
+                        <div class="flex items-center">
+                            <span>${part.partNumber}</span>
+                            <button class="ml-2 text-gray-400 hover:text-blue-600 research-btn" data-part-number="${part.partNumber}" data-part-name="${part.name}"><i data-lucide="search" class="w-4 h-4"></i></button>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">${part.quantity}</td>
+                    <td class="px-6 py-4">${part.price > 0 ? `¥${part.price.toLocaleString()}` : '-'}</td>
+                    <td class="px-6 py-4">${part.leadTime > 0 ? `${part.leadTime} ${currentLang === 'ja' ? '日' : 'Days'}`: '-'}</td>
+                    <td class="px-6 py-4">${part.supplier}</td>`;
+                partsTableBody.appendChild(row);
+            });
+        }
+        document.querySelectorAll('.research-btn').forEach(btn => btn.addEventListener('click', (e) => openResearchModal(e.currentTarget.dataset.partNumber, e.currentTarget.dataset.partName)));
+        lucide.createIcons();
+        updatePaginationControls();
+    }
+
+    function updateSummary(parts) {
+        totalPriceEl.textContent = `¥${parts.reduce((s, p) => s + (p.price * p.quantity), 0).toLocaleString()}`;
+        longestLeadTimeEl.textContent = `${Math.max(0, ...parts.map(p => p.leadTime))} ${currentLang === 'ja' ? '日' : 'Days'}`;
+    }
+
+    function updatePaginationControls() {
+        const total = filteredParts.length;
+        const start = total > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+        const end = Math.min(currentPage * itemsPerPage, total);
+        pageInfoEl.textContent = translations[currentLang].page_info_template.replace('{start}', start).replace('{end}', end).replace('{total}', total);
+        prevPageBtn.disabled = currentPage === 1;
+        nextPageBtn.disabled = currentPage >= Math.ceil(total / itemsPerPage);
+    }
+
+    function applyFilters() {
+        if (currentFilter.type && currentFilter.value) {
+            const key = { part_type: 'type', match_status: 'matchStatus', purchase_status: 'purchaseStatus' }[currentFilter.type];
+            filteredParts = allParts.filter(p => p[key] === currentFilter.value);
+        } else {
+            filteredParts = [...allParts];
+        }
+    }
+    
+    function applyFilterAndRender() {
+        applyFilters();
+        updateDashboard();
+        renderTable();
+        updateOnSelectionChange();
+    }
+
+    function renderApp() {
+        applyFilters(); 
+        updateDashboard();
+        renderTable();
+        updateOnSelectionChange();
+    }
+
+    function updateDashboard() {
+        let partsToSummarize = [];
+        if (summaryViewMode === 'selected') {
+            partsToSummarize = allParts.filter(p => selectedPartIds.has(p.id));
+            clearFiltersBtn.classList.add('invisible');
+
+        } else {
+            partsToSummarize = filteredParts;
+            clearFiltersBtn.classList.remove('invisible');
+        }
+        updateSummary(partsToSummarize);
+        updateCharts(partsToSummarize);
+    }
+    
+    function updateOnSelectionChange() {
+        addToListBtn.disabled = selectedPartIds.size === 0;
+
+        const filteredIds = new Set(filteredParts.map(p => p.id));
+        const selectedFilteredIds = new Set([...selectedPartIds].filter(id => filteredIds.has(id)));
+        
+        if (selectedFilteredIds.size === 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        } else if (selectedFilteredIds.size === filteredIds.size && filteredIds.size > 0) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = selectedFilteredIds.size > 0;
+        }
+
+        if (summaryViewMode === 'selected') {
+            updateDashboard();
+        }
+    }
+    
+    function updateSummaryToggleUI() {
+        if (summaryViewMode === 'all') {
+            showAllSummaryBtn.classList.add('bg-white', 'shadow');
+            showAllSummaryBtn.classList.remove('text-gray-600');
+            showSelectedSummaryBtn.classList.remove('bg-white', 'shadow');
+            showSelectedSummaryBtn.classList.add('text-gray-600');
+        } else {
+            showSelectedSummaryBtn.classList.add('bg-white', 'shadow');
+            showSelectedSummaryBtn.classList.remove('text-gray-600');
+            showAllSummaryBtn.classList.remove('bg-white', 'shadow');
+            showAllSummaryBtn.classList.add('text-gray-600');
+        }
+    }
+
+
+    // --- Event Listeners ---
+    itemsPerPageSelect.addEventListener('change', (e) => { itemsPerPage = parseInt(e.target.value); currentPage = 1; renderTable(); });
+    prevPageBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderTable(); } });
+    nextPageBtn.addEventListener('click', () => { if (currentPage < Math.ceil(filteredParts.length / itemsPerPage)) { currentPage++; renderTable(); } });
+    clearFiltersBtn.addEventListener('click', () => { currentFilter = { type: null, value: null }; currentPage = 1; applyFilterAndRender(); });
+    selectAllCheckbox.addEventListener('change', (e) => {
+        const paginatedIds = new Set(filteredParts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(p => p.id));
+        paginatedIds.forEach(id => {
+            if(e.target.checked) {
+                selectedPartIds.add(id);
+            } else {
+                selectedPartIds.delete(id);
+            }
+        });
+        renderTable();
+        updateOnSelectionChange();
+    });
+
+    partsTableBody.addEventListener('change', (e) => {
+        if (e.target.classList.contains('row-checkbox')) {
+            const partId = parseInt(e.target.dataset.partId, 10);
+            if(e.target.checked) {
+                selectedPartIds.add(partId);
+            } else {
+                selectedPartIds.delete(partId);
+            }
+            updateOnSelectionChange();
+        }
+    });
+
+    showAllSummaryBtn.addEventListener('click', () => {
+        summaryViewMode = 'all';
+        updateSummaryToggleUI();
+        updateDashboard();
+    });
+
+    showSelectedSummaryBtn.addEventListener('click', () => {
+        summaryViewMode = 'selected';
+        updateSummaryToggleUI();
+        updateDashboard();
+    });
+
+    addToListBtn.addEventListener('click', () => {
+        if (selectedPartIds.size > 0) {
+            console.log("Adding to list:", Array.from(selectedPartIds));
+            // Here you would typically add logic to handle the selected parts
+        }
+    });
+
+
+    // --- PDF Export ---
+    pdfExportBtn.addEventListener('click', () => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const head = [['Part Number', 'Quantity', 'Price', 'Lead Time', 'Supplier']];
+        const body = filteredParts.map(p => [ p.partNumber, p.quantity, p.price > 0 ? `¥${p.price.toLocaleString()}` : '-', p.leadTime > 0 ? `${p.leadTime} Days` : '-', p.supplier ]);
+        doc.autoTable({ head, body, startY: 20, didDrawPage: data => doc.text("BOM Export", data.settings.margin.left, 15) });
+        doc.save(`proto14-bom-export-${new Date().toISOString().slice(0,10)}.pdf`);
+    });
+
+    // --- Modal Logic ---
+    function openResearchModal(partNumber, partName) {
+        document.getElementById('modal-part-number').value = partNumber || '';
+        document.getElementById('modal-part-name').value = partName || '';
+        researchModal.classList.remove('hidden');
+    }
+    function closeResearchModal() { researchModal.classList.add('hidden'); }
+    modalCloseBtn.addEventListener('click', closeResearchModal);
+    researchModal.addEventListener('click', (e) => { if (e.target === researchModal) closeResearchModal(); });
+    document.getElementById('modal-search-btn').addEventListener('click', () => {
+        console.log('Searching for:', document.getElementById('modal-part-number').value, document.getElementById('modal-part-name').value);
+        closeResearchModal();
+    });
+    
+    // --- Initial Setup ---
+    lucide.createIcons();
+    setLanguage('ja');
+    showView('upload');
+
+});
+</script>
+</body>
+</html>

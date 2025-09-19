@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proto 14 - Procurement Plan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Tooltip Styles */
+        [data-tooltip] {
+            position: relative;
+        }
+        [data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #334155;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 10;
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+
+    <!-- ===== MAIN APPLICATION CONTAINER ===== -->
+    <div id="app" class="flex flex-col h-screen">
+
+        <!-- ===== HEADER ===== -->
+        <header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-40">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <!-- Left Side: Title -->
+                    <div class="flex items-center">
+                        <h1 class="text-2xl font-bold text-blue-600">Proto 14</h1>
+                    </div>
+                    <!-- Right Side: Navigation & Language Selector -->
+                    <div class="flex items-center space-x-4">
+                        <nav class="flex items-center space-x-2">
+                            <a href="#" id="nav-arrangement-list" class="nav-item p-2 text-slate-500 hover:text-blue-600 rounded-full hover:bg-slate-100" data-tooltip="調達プラン" data-lang-key="tooltip_arrangement_list">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
+                            </a>
+                            <a href="#" id="nav-cart" class="nav-item p-2 text-slate-500 hover:text-blue-600 rounded-full hover:bg-slate-100" data-tooltip="カート" data-lang-key="tooltip_cart">
+                               <div class="relative">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                                 <span id="cart-item-count" class="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+                               </div>
+                            </a>
+                            <a href="#" class="nav-item p-2 text-slate-500 hover:text-blue-600 rounded-full hover:bg-slate-100" data-tooltip="注文履歴" data-lang-key="tooltip_order_history">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+                            </a>
+                            <a href="#" class="nav-item p-2 text-slate-500 hover:text-blue-600 rounded-full hover:bg-slate-100" data-tooltip="取引先リスト" data-lang-key="tooltip_partners">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            </a>
+                            <a href="#" class="nav-item p-2 text-slate-500 hover:text-blue-600 rounded-full hover:bg-slate-100" data-tooltip="設定" data-lang-key="tooltip_settings">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73 2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </a>
+                        </nav>
+                        <div class="border-l border-slate-200 pl-4">
+                            <select id="language-switcher" class="bg-white border border-slate-300 rounded-md py-1.5 pl-2 pr-8 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none focus:border-blue-500">
+                                <option value="ja">日本語</option>
+                                <option value="en">English</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ===== MAIN CONTENT AREA ===== -->
+        <main class="flex-grow container mx-auto p-4 sm:p-6 lg:p-8 overflow-y-auto">
+            
+            <!-- ===== SCREEN 1: Arrangement List ===== -->
+            <div id="screen-arrangement-list" class="screen">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-semibold text-slate-900" data-lang-key="arrangement_list_title_short">調達プラン</h2>
+                </div>
+
+                <!-- Projects Container -->
+                <div id="project-list-container" class="space-y-8">
+                    <!-- Project lists will be dynamically inserted here -->
+                </div>
+                
+            </div>
+
+            <!-- ===== SCREEN 2: Cart ===== -->
+            <div id="screen-cart" class="screen hidden">
+                <div class="flex items-center mb-6">
+                    <button class="back-btn mr-4 p-2 rounded-full hover:bg-slate-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+                    </button>
+                    <h2 class="text-2xl font-semibold text-slate-900" data-lang-key="cart_title">カート</h2>
+                </div>
+
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-slate-200">
+                            <thead class="bg-slate-50">
+                                <tr>
+                                    <th class="w-16 py-3 px-4 text-left">
+                                        <input type="checkbox" id="cart-select-all" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                                    </th>
+                                    <th class="py-3 px-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider" data-lang-key="col_product_name">商品名</th>
+                                    <th class="py-3 px-4 text-center text-xs font-medium text-slate-500 uppercase tracking-wider" data-lang-key="col_quantity">数量</th>
+                                    <th class="py-3 px-4 text-center text-xs font-medium text-slate-500 uppercase tracking-wider" data-lang-key="col_delivery">納期</th>
+                                    <th class="py-3 px-4 text-right text-xs font-medium text-slate-500 uppercase tracking-wider" data-lang-key="col_unit_price">単価</th>
+                                    <th class="py-3 px-4 text-right text-xs font-medium text-slate-500 uppercase tracking-wider" data-lang-key="col_amount">金額</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cart-list-body" class="bg-white divide-y divide-slate-200">
+                                <!-- Cart items will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="cart-empty-message" class="text-center p-12 text-slate-500 hidden" data-lang-key="cart_empty">
+                        カートに商品がありません。
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end">
+                     <button id="proceed-to-order-btn" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-slate-300" disabled>
+                        <span data-lang-key="proceed_to_order_btn">注文へ進む</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- ===== SCREEN 3: Order Form ===== -->
+            <div id="screen-order" class="screen hidden">
+                 <div class="flex items-center mb-6">
+                    <button class="back-btn mr-4 p-2 rounded-full hover:bg-slate-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+                    </button>
+                    <h2 class="text-2xl font-semibold text-slate-900" data-lang-key="order_form_title">注文手続き</h2>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 space-y-8">
+                        <!-- Shipping Section -->
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <h3 class="text-xl font-semibold mb-4 border-b pb-3" data-lang-key="shipping_title">お届け方法</h3>
+                            
+                            <!-- Shipping Address -->
+                            <div class="mt-4">
+                                <h4 class="font-semibold text-md mb-2" data-lang-key="shipping_address_title">配送先</h4>
+                                <select id="shipping-address-select" class="w-full p-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                   <option value="default" data-lang-key="shipping_address_default">本社 (東京都千代田区丸の内1-1-1)</option>
+                                   <option value="factory" data-lang-key="shipping_address_factory">A工場 (神奈川県横浜市港北区新横浜2-2-2)</option>
+                                   <option value="new" data-lang-key="shipping_address_new">新しい配送先を入力する</option>
+                                </select>
+                                <div id="new-address-form" class="hidden space-y-3 pt-4 mt-3 border-t">
+                                    <input type="text" class="w-full p-2 border border-slate-300 rounded-md" data-lang-key-placeholder="placeholder_address_name">
+                                    <input type="text" class="w-full p-2 border border-slate-300 rounded-md" data-lang-key-placeholder="placeholder_postal_code">
+                                    <input type="text" class="w-full p-2 border border-slate-300 rounded-md" data-lang-key-placeholder="placeholder_address_full">
+                                </div>
+                            </div>
+                             <!-- Shipping Method -->
+                             <div class="mt-6">
+                                <h4 class="font-semibold text-md mb-2" data-lang-key="shipping_method_title">配送方法</h4>
+                                <div id="shipping-method-options" class="space-y-3">
+                                    <label class="flex items-center p-3 border rounded-md has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
+                                        <input type="radio" name="shipping-method" value="individual" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300" checked>
+                                        <span class="ml-3 text-sm font-medium" data-lang-key="shipping_method_individual">個別に最短納期で納品</span>
+                                    </label>
+                                    <label class="flex items-center p-3 border rounded-md has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
+                                        <input type="radio" name="shipping-method" value="consolidated" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300">
+                                        <span class="ml-3 text-sm font-medium" data-lang-key="shipping_method_consolidated">まとめて納品</span>
+                                    </label>
+                                    <label class="flex items-center p-3 border rounded-md has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
+                                        <input type="radio" name="shipping-method" value="unit_specific" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300">
+                                        <span class="ml-3 text-sm font-medium" data-lang-key="shipping_method_unit_specific">ユニット別納品</span>
+                                    </label>
+                                    <label class="flex items-center p-3 border rounded-md has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
+                                        <input type="radio" name="shipping-method" value="kitting" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300">
+                                        <span class="ml-3 text-sm font-medium" data-lang-key="shipping_method_kitting">まとめて納品：ユニット別キッティング</span>
+                                    </label>
+                                     <label class="flex items-center p-3 border rounded-md has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
+                                        <input type="radio" name="shipping-method" value="scheduled" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300">
+                                        <span class="ml-3 text-sm font-medium" data-lang-key="shipping_method_scheduled">日付指定納品</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Order Items Display -->
+                        <div id="order-items-container">
+                            <!-- Dynamic content based on shipping method -->
+                        </div>
+
+                        <!-- Payment Method -->
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <h3 class="text-xl font-semibold mb-4 border-b pb-3" data-lang-key="payment_method_title">決済方法</h3>
+                            <div class="space-y-3 mt-4">
+                                <label class="flex items-center p-3 border rounded-md has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
+                                    <input type="radio" name="payment-method" value="invoice" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300" checked>
+                                    <span class="ml-3 text-sm font-medium" data-lang-key="payment_method_invoice">請求書払い</span>
+                                </label>
+                                <label class="flex items-center p-3 border rounded-md has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
+                                    <input type="radio" name="payment-method" value="netting" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300">
+                                    <span class="ml-3 text-sm font-medium" data-lang-key="payment_method_netting">請求書払い (販売金額とネッティング)</span>
+                                </label>
+                                <label class="flex items-center p-3 border rounded-md has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500">
+                                    <input type="radio" name="payment-method" value="card" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300">
+                                    <span class="ml-3 text-sm font-medium" data-lang-key="payment_method_card">クレジットカード決済</span>
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Order Summary -->
+                    <div class="lg:col-span-1">
+                        <div class="sticky top-24 bg-white p-6 rounded-lg shadow">
+                            <h3 class="text-lg font-semibold mb-4" data-lang-key="order_summary_title">ご注文内容</h3>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-600" data-lang-key="order_summary_subtotal">商品小計</span>
+                                    <span id="order-subtotal">¥0</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-600" data-lang-key="order_summary_shipping">送料</span>
+                                    <span id="order-shipping" data-lang-key="order_summary_shipping_tbd">別途計算</span>
+                                </div>
+                                <div class="flex justify-between font-bold text-lg border-t pt-4 mt-4">
+                                    <span data-lang-key="order_summary_total">合計</span>
+                                    <span id="order-total">¥0</span>
+                                </div>
+                            </div>
+                             <button id="confirm-order-btn" class="mt-6 w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <span data-lang-key="confirm_order_btn">注文を確定する</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ===== MODAL CONTAINER ===== -->
+    <div id="modal-container" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden">
+        <div id="modal-content" class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all">
+            <div class="p-6">
+                <h3 id="modal-title" class="text-lg font-medium leading-6 text-slate-900"></h3>
+                <div class="mt-2">
+                    <p id="modal-message" class="text-sm text-slate-500"></p>
+                </div>
+            </div>
+            <div class="bg-slate-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" id="modal-confirm-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"></button>
+                <button type="button" id="modal-cancel-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-slate-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // ===== STATE MANAGEMENT =====
+        const state = {
+            currentLang: 'ja',
+            currentScreen: 'screen-arrangement-list',
+            cart: [], 
+            cartSelection: new Set(),
+        };
+
+        // ===== I18N (Internationalization) TEXTS =====
+        const i18n = {
+            ja: {
+                tooltip_arrangement_list: '調達プラン',
+                tooltip_cart: 'カート',
+                tooltip_order_history: '注文履歴',
+                tooltip_partners: '取引先リスト',
+                tooltip_settings: '設定',
+                arrangement_list_title_short: '調達プラン',
+                project_header: 'プロジェクト: {name}',
+                col_status: 'ステータス',
+                col_product_name: '商品名',
+                col_part_number: '商品コード',
+                col_quantity: '数量',
+                col_amount: '金額',
+                col_delivery: '納期',
+                delivery_days: '{days}営業日',
+                add_to_cart_btn_item: 'カートへ',
+                cart_title: 'カート',
+                col_brand: 'ブランド',
+                col_seller: '販売者',
+                col_project: 'プロジェクト',
+                col_unit_price: '単価',
+                seller_misumi: 'MISUMI',
+                seller_mcmaster: 'McMaster-Carr',
+                seller_dealer_a: 'DealerA',
+                cart_empty: 'カートに商品がありません。',
+                proceed_to_order_btn: '注文へ進む',
+                order_form_title: '注文手続き',
+                shipping_title: 'お届け方法',
+                shipping_address_title: '配送先',
+                shipping_address_default: '本社 (東京都千代田区丸の内1-1-1)',
+                shipping_address_factory: 'A工場 (神奈川県横浜市港北区新横浜2-2-2)',
+                shipping_address_new: '新しい配送先を入力する',
+                placeholder_address_name: '配送先名 (例: B工場)',
+                placeholder_postal_code: '郵便番号',
+                placeholder_address_full: '住所',
+                shipping_method_title: '配送方法',
+                shipping_method_individual: '個別に最短納期で納品',
+                shipping_method_consolidated: 'まとめて納品',
+                shipping_method_unit_specific: 'ユニット別納品',
+                shipping_method_kitting: 'まとめて納品：ユニット別キッティング',
+                shipping_method_scheduled: '日付指定納品',
+                delivery_est_date: 'お届け予定日: {date}',
+                delivery_est_consolidated: 'お届け予定: {date} までに一括配送',
+                kitting_unit_title: '{unitName} の部品',
+                unit_assembly: 'ユニット一式',
+                specify_delivery_date_label: '希望納品日',
+                payment_method_title: '決済方法',
+                payment_method_invoice: '請求書払い',
+                payment_method_netting: '請求書払い (販売金額とネッティング)',
+                payment_method_card: 'クレジットカード決済',
+                order_summary_title: 'ご注文内容',
+                order_summary_subtotal: '商品小計',
+                order_summary_shipping: '送料',
+                order_summary_shipping_tbd: '別途計算',
+                order_summary_total: '合計',
+                confirm_order_btn: '注文を確定する',
+                modal_add_to_cart_title: 'カートに追加',
+                modal_add_to_cart_message: '{count}個のアイテムをカートに追加しますか？',
+                modal_confirm_order_title: '注文の確定',
+                modal_confirm_order_message: 'この内容で注文を確定します。よろしいですか？',
+                modal_order_complete_title: '注文完了',
+                modal_order_complete_message: 'ご注文ありがとうございます。注文番号: {orderId}',
+                btn_confirm: 'はい',
+                btn_cancel: 'キャンセル',
+                btn_close: '閉じる',
+                status_unordered: '未発注',
+                status_scheduled: '納品予定',
+                status_delivered: '納品済',
+                status_added_to_cart: 'カート連携済み',
+                delivery_format_unordered: '{days}営業日 ({date}着予定)',
+            },
+            en: {
+                tooltip_arrangement_list: 'Procurement Plan',
+                tooltip_cart: 'Cart',
+                tooltip_order_history: 'Order History',
+                tooltip_partners: 'Partners',
+                tooltip_settings: 'Settings',
+                arrangement_list_title_short: 'Procurement Plan',
+                project_header: 'Project: {name}',
+                col_status: 'Status',
+                col_product_name: 'Product Name',
+                col_part_number: 'Part Number',
+                col_quantity: 'Qty',
+                col_amount: 'Amount',
+                col_delivery: 'Delivery',
+                delivery_days: '{days} business days',
+                add_to_cart_btn_item: 'To Cart',
+                cart_title: 'Shopping Cart',
+                col_brand: 'Brand',
+                col_seller: 'Seller',
+                col_project: 'Project',
+                col_unit_price: 'Unit Price',
+                seller_misumi: 'MISUMI',
+                seller_mcmaster: 'McMaster-Carr',
+                seller_dealer_a: 'DealerA',
+                cart_empty: 'Your cart is empty.',
+                proceed_to_order_btn: 'Proceed to Order',
+                order_form_title: 'Order Process',
+                shipping_title: 'Shipping Details',
+                shipping_address_title: 'Shipping Address',
+                shipping_address_default: 'Head Office (1-1-1 Marunouchi, Chiyoda-ku, Tokyo)',
+                shipping_address_factory: 'Factory A (2-2-2 Shin-Yokohama, Kohoku-ku, Yokohama)',
+                shipping_address_new: 'Enter a new address',
+                placeholder_address_name: 'Address Name (e.g., Factory B)',
+                placeholder_postal_code: 'Postal Code',
+                placeholder_address_full: 'Address',
+                shipping_method_title: 'Shipping Method',
+                shipping_method_individual: 'Individual delivery on the earliest date',
+                shipping_method_consolidated: 'Consolidated delivery',
+                shipping_method_unit_specific: 'Deliver by Unit',
+                shipping_method_kitting: 'Consolidated delivery: Kitted by unit',
+                shipping_method_scheduled: 'Specify delivery date',
+                delivery_est_date: 'Estimated Delivery: {date}',
+                delivery_est_consolidated: 'Consolidated Delivery by {date}',
+                kitting_unit_title: 'Parts for {unitName}',
+                unit_assembly: 'Unit Assembly',
+                specify_delivery_date_label: 'Preferred Delivery Date',
+                payment_method_title: 'Payment Method',
+                payment_method_invoice: 'Invoice',
+                payment_method_netting: 'Invoice (Netting with sales)',
+                payment_method_card: 'Credit Card',
+                order_summary_title: 'Order Summary',
+                order_summary_subtotal: 'Subtotal',
+                order_summary_shipping: 'Shipping',
+                order_summary_shipping_tbd: 'Calculated separately',
+                order_summary_total: 'Total',
+                confirm_order_btn: 'Confirm Order',
+                modal_add_to_cart_title: 'Add to Cart',
+                modal_add_to_cart_message: 'Add {count} items to the cart?',
+                modal_confirm_order_title: 'Confirm Order',
+                modal_confirm_order_message: 'Are you sure you want to confirm this order?',
+                modal_order_complete_title: 'Order Complete',
+                modal_order_complete_message: 'Thank you for your order. Order ID: {orderId}',
+                btn_confirm: 'Confirm',
+                btn_cancel: 'Cancel',
+                btn_close: 'Close',
+                status_unordered: 'Unordered',
+                status_scheduled: 'Scheduled',
+                status_delivered: 'Delivered',
+                status_added_to_cart: 'Added to Cart',
+                delivery_format_unordered: '{days} business days (Est. {date})',
+            }
+        };
+
+        // ===== DUMMY DATA =====
+        const projects = {
+            'PROJ-001': {
+                name: { ja: 'ヒューマノイドプロジェクト', en: 'Humanoid Project' },
+                items: {
+                    'H-01': { parent: null, name: { ja: '頭部ユニット', en: 'Head Unit' }, partNumber: 'RC-UNIT-HEAD-01', qty: 1 },
+                    'H-01-01': { parent: 'H-01', name: { ja: '4K C-MOSセンサーカメラ', en: '4K C-MOS Sensor Camera' }, partNumber: 'OI-CAM-4K-25', price: 15000, qty: 2, deliveryDays: 5, brand: 'Optics Inc.', sellerKey: 'seller_misumi', status: 'scheduled', orderDate: '2025-09-10' },
+                    'H-01-02': { parent: 'H-01', name: { ja: 'デュアルマイク アレイモジュール', en: 'Dual-Mic Array Module' }, partNumber: 'SS-VRM-V3', price: 12000, qty: 1, deliveryDays: 7, brand: 'Sound Systems', sellerKey: 'seller_dealer_a', status: 'delivered', orderDate: '2025-09-05' },
+                    'H-01-03': { parent: 'H-01', name: { ja: 'Cortex-A72搭載 SBC', en: 'SBC with Cortex-A72' }, partNumber: 'RC-CPU-X5', price: 23000, qty: 1, deliveryDays: 6, brand: 'RoboCore', sellerKey: 'seller_mcmaster', status: 'unordered' },
+                    'B-01': { parent: null, name: { ja: '胴体ユニット', en: 'Torso Unit' }, partNumber: 'RC-UNIT-TORSO-01', qty: 1 },
+                    'B-01-01': { parent: 'B-01', name: { ja: 'T6アルミニウム合金製フレーム', en: 'T6 Aluminum Alloy Frame' }, partNumber: 'MSM-FRM-T6-B', price: 80000, qty: 1, deliveryDays: 10, brand: 'MISUMI', sellerKey: 'seller_misumi', status: 'unordered' },
+                    'B-01-02': { parent: 'B-01', name: { ja: 'リチウムイオンバッテリー 24V/10Ah', en: 'Lithium-ion Battery 24V/10Ah' }, partNumber: 'EC-BAT-24V-10AH', price: 40000, qty: 1, deliveryDays: 8, brand: 'Energy Core', sellerKey: 'seller_mcmaster', status: 'unordered' },
+                }
+            },
+            'PROJ-002': {
+                name: { ja: 'ドローンプロジェクト', en: 'Drone Project' },
+                items: {
+                    'D-01': { parent: null, name: { ja: '機体ユニット', en: 'Frame Unit' }, partNumber: 'DP-UNIT-FRAME-01', qty: 1 },
+                    'D-01-01': { parent: 'D-01', name: { ja: 'カーボンファイバーフレーム 250mm', en: 'Carbon Fiber Frame 250mm' }, partNumber: 'DP-FRM-C250', price: 8000, qty: 1, deliveryDays: 4, brand: 'DroneParts', sellerKey: 'seller_dealer_a', status: 'delivered', orderDate: '2025-09-01' },
+                    'D-01-02': { parent: 'D-01', name: { ja: 'ブラシレスモーター 2205 2300KV', en: 'Brushless Motor 2205 2300KV' }, partNumber: 'MCM-MTR-2205', price: 2500, qty: 4, deliveryDays: 3, brand: 'MotorCorp', sellerKey: 'seller_mcmaster', status: 'unordered' },
+                }
+            }
+        };
+
+        const allItems = {};
+        Object.values(projects).forEach(p => {
+            Object.assign(allItems, p.items);
+        });
+        Object.assign(allItems, {
+            'NP-01': { parent: null, isProjectItem: false, name: { ja: '六角レンチセット 12本組', en: 'Hex Wrench Set, 12-piece' }, partNumber: 'TM-HEX-S12', price: 2500, qty: 1, deliveryDays: 2, brand: 'ToolMaster', sellerKey: 'seller_mcmaster' },
+        });
+
+        // Initialize and build trees for each project, and calculate unit totals
+        Object.values(projects).forEach(proj => {
+            proj.itemTree = [];
+            const itemMap = new Map(Object.entries(proj.items));
+            itemMap.forEach((item, id) => {
+                item.id = id;
+                item.children = [];
+                item.descendants = [];
+            });
+            itemMap.forEach(item => {
+                if (item.parent) {
+                    const parent = itemMap.get(item.parent);
+                    if (parent) parent.children.push(item);
+                } else {
+                    proj.itemTree.push(item);
+                }
+            });
+            
+            const getDescendants = (item) => {
+                let desc = [];
+                for (const child of item.children) { desc.push(child); desc = desc.concat(getDescendants(child)); }
+                return desc;
+            }
+
+            const calculateUnitTotals = (unit) => {
+                if (unit.children.length === 0) return;
+                
+                let totalPrice = 0;
+                let maxDelivery = 0;
+                let statuses = new Set();
+                let latestOrderDate = new Date(0);
+
+                unit.children.forEach(child => {
+                    if(child.children.length > 0) { // If child is a sub-unit
+                        calculateUnitTotals(child);
+                    }
+                    totalPrice += (child.price || 0) * child.qty;
+                    if((child.deliveryDays || 0) > maxDelivery) {
+                        maxDelivery = child.deliveryDays;
+                    }
+                    statuses.add(child.status);
+                    if(child.orderDate && new Date(child.orderDate) > latestOrderDate) {
+                        latestOrderDate = new Date(child.orderDate);
+                    }
+                });
+                unit.price = totalPrice;
+                unit.deliveryDays = maxDelivery;
+                
+                if (latestOrderDate > new Date(0)) {
+                    unit.orderDate = latestOrderDate.toISOString().split('T')[0];
+                }
+                
+                // Aggregate status logic
+                if (statuses.has('unordered')) {
+                    unit.status = 'unordered';
+                } else if (statuses.has('scheduled')) {
+                    unit.status = 'scheduled';
+                } else {
+                    unit.status = 'delivered';
+                }
+            };
+
+            itemMap.forEach(item => {
+                if (item.children.length > 0) {
+                    item.descendants = getDescendants(item).map(d => d.id);
+                    calculateUnitTotals(item);
+                }
+            });
+        });
+
+        // ===== DOM ELEMENTS =====
+        const screens = document.querySelectorAll('.screen');
+        const languageSwitcher = document.getElementById('language-switcher');
+        const projectListContainer = document.getElementById('project-list-container');
+        const cartItemCount = document.getElementById('cart-item-count');
+        const cartListBody = document.getElementById('cart-list-body');
+        const cartSelectAll = document.getElementById('cart-select-all');
+        const cartEmptyMessage = document.getElementById('cart-empty-message');
+        const proceedToOrderBtn = document.getElementById('proceed-to-order-btn');
+        const shippingAddressSelect = document.getElementById('shipping-address-select');
+        const newAddressForm = document.getElementById('new-address-form');
+        const orderItemsContainer = document.getElementById('order-items-container');
+        const shippingMethodOptions = document.getElementById('shipping-method-options');
+        const orderSubtotal = document.getElementById('order-subtotal');
+        const orderTotal = document.getElementById('order-total');
+        const confirmOrderBtn = document.getElementById('confirm-order-btn');
+        const modalContainer = document.getElementById('modal-container');
+        const modalContent = document.getElementById('modal-content');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+        const modalCancelBtn = document.getElementById('modal-cancel-btn');
+
+        // ===== UTILITY FUNCTIONS =====
+        const formatCurrency = (amount) => `¥${amount.toLocaleString('ja-JP')}`;
+        
+        const getText = (key, replacements = {}) => {
+            let text = i18n[state.currentLang][key] || key;
+            Object.entries(replacements).forEach(([placeholder, value]) => {
+                text = text.replace(`{${placeholder}}`, value);
+            });
+            return text;
+        };
+
+        const addBusinessDays = (startDate, days) => {
+            let date = new Date(startDate);
+            let added = 0;
+            while (added < days) {
+                date.setDate(date.getDate() + 1);
+                let dayOfWeek = date.getDay();
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Not Sunday or Saturday
+                    added++;
+                }
+            }
+            return date;
+        };
+
+        const formatDate = (date) => {
+             const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+             return date.toLocaleDateString('ja-JP', options);
+        };
+        
+        const getConfigurationPath = (item, lang) => {
+            let path = [];
+            let current = item;
+            while (current.parent) {
+                current = allItems[current.parent];
+                path.unshift(current.name[lang]);
+            }
+             const proj = Object.values(projects).find(p => p.items[item.id]);
+            if (proj) {
+                path.unshift(proj.name[lang]);
+            }
+            return path.join(' / ');
+        };
+        
+        const getTopParentId = (item) => {
+            if (item.isProjectItem === false) return 'NP'; // Non-Project
+            let current = item;
+            while (current.parent && allItems[current.parent]) {
+                current = allItems[current.parent];
+            }
+            return current.id;
+        };
+
+        // ===== UI RENDERING & UPDATE FUNCTIONS =====
+
+        const updateLanguage = () => {
+            state.currentLang = languageSwitcher.value;
+            document.documentElement.lang = state.currentLang;
+            
+            document.querySelectorAll('[data-lang-key]').forEach(el => {
+                const key = el.dataset.langKey;
+                const replacements = JSON.parse(el.dataset.langParams || '{}');
+                el.innerText = getText(key, replacements);
+            });
+            document.querySelectorAll('[data-lang-key-placeholder]').forEach(el => {
+                el.placeholder = getText(el.dataset.langKeyPlaceholder);
+            });
+            document.querySelectorAll('[data-tooltip]').forEach(el => {
+                el.dataset.tooltip = getText(el.dataset.langKey);
+            });
+
+            renderArrangementList();
+            renderCart();
+            if (state.currentScreen === 'screen-order') {
+                renderOrderItems();
+            }
+        };
+
+        const showScreen = (screenId) => {
+            screens.forEach(s => s.classList.add('hidden'));
+            document.getElementById(screenId).classList.remove('hidden');
+            state.currentScreen = screenId;
+            window.scrollTo(0, 0);
+        };
+
+        const renderArrangementList = () => {
+            projectListContainer.innerHTML = '';
+
+            const createRow = (item, level) => {
+                const tr = document.createElement('tr');
+                tr.dataset.id = item.id;
+                const isUnit = item.children.length > 0;
+
+                const statusClasses = {
+                    unordered: 'bg-slate-200 text-slate-700',
+                    scheduled: 'bg-blue-200 text-blue-800',
+                    delivered: 'bg-green-200 text-green-800',
+                };
+                const statusKey = `status_${item.status}`;
+                const statusBadge = `<span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClasses[item.status]}">${getText(statusKey)}</span>`;
+                
+                const today = new Date('2025-09-15T12:00:00'); // Simulate current date for consistency
+                let deliveryHTML = '';
+                if(item.deliveryDays) {
+                    if(item.status === 'unordered') {
+                        const estDate = addBusinessDays(today, item.deliveryDays);
+                        deliveryHTML = getText('delivery_format_unordered', {days: item.deliveryDays, date: formatDate(estDate)});
+                    } else if (item.status === 'scheduled' || item.status === 'delivered') {
+                        const deliveryDate = addBusinessDays(new Date(item.orderDate), item.deliveryDays);
+                        deliveryHTML = formatDate(deliveryDate);
+                    }
+                }
+
+                if (isUnit) {
+                    tr.classList.add('bg-slate-50', 'font-semibold');
+                    tr.innerHTML = `
+                        <td colspan="5" class="py-2 px-4 text-slate-800" style="padding-left: ${1 + level * 1.5}rem;">
+                           ${item.name[state.currentLang]}
+                        </td>
+                        <td class="py-2 px-4 text-sm text-slate-500 text-right amount-cell">${formatCurrency(item.price * item.qty)}</td>
+                        <td class="py-2 px-4 text-sm text-slate-500 text-center font-normal">${deliveryHTML}</td>
+                        <td class="py-2 px-4"></td>
+                        <td class="py-2 px-4 text-center">
+                           ${item.status === 'unordered' ? `<button data-id="${item.id}" class="add-item-to-cart-btn text-blue-600 hover:text-blue-800 text-xs font-bold">${getText('add_to_cart_btn_item')}</button>` : ''}
+                        </td>`;
+                } else { // It's a part
+                    tr.classList.add('bg-white', 'hover:bg-blue-50');
+                    tr.innerHTML = `
+                        <td class="py-3 px-4 text-sm font-medium text-slate-900" style="padding-left: ${2.5 + level * 1.5}rem;">
+                            ${item.name[state.currentLang]}
+                        </td>
+                        <td class="py-3 px-4 text-xs text-slate-500">${item.partNumber}</td>
+                        <td class="py-3 px-4 text-sm text-slate-600">${item.brand}</td>
+                        <td class="py-3 px-4 text-sm text-slate-500 text-right price-cell">${formatCurrency(item.price)}</td>
+                        <td class="py-3 px-4 text-sm text-slate-500 text-center">${item.qty}</td>
+                        <td class="py-3 px-4 text-right amount-cell">${formatCurrency(item.price * item.qty)}</td>
+                        <td class="py-3 px-4 text-sm text-slate-500 text-center">${deliveryHTML}</td>
+                        <td class="py-3 px-4">${statusBadge}</td>
+                        <td class="py-3 px-4 text-center">
+                           ${item.status === 'unordered' ? `<button data-id="${item.id}" class="add-item-to-cart-btn text-blue-600 hover:text-blue-800 text-xs font-bold">${getText('add_to_cart_btn_item')}</button>` : ''}
+                        </td>
+                        `;
+                }
+                return tr;
+            };
+
+            const appendChildren = (items, level, tbody) => {
+                items.forEach(item => {
+                    tbody.appendChild(createRow(item, level));
+                    if (item.children.length > 0) {
+                        appendChildren(item.children, level + 1, tbody);
+                    }
+                });
+            };
+            
+            Object.values(projects).forEach(project => {
+                const projectHeader = document.createElement('h3');
+                projectHeader.className = 'text-xl font-semibold text-slate-800';
+                projectHeader.dataset.langKey = 'project_header';
+                projectHeader.dataset.langParams = JSON.stringify({ name: project.name[state.currentLang] });
+                
+                const tableContainer = document.createElement('div');
+                tableContainer.className = 'bg-white rounded-lg shadow overflow-hidden mt-3';
+
+                const table = document.createElement('table');
+                table.className = 'min-w-full';
+                table.innerHTML = `
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="py-3 px-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider" data-lang-key="col_product_name"></th>
+                            <th class="py-3 px-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider" data-lang-key="col_part_number"></th>
+                            <th class="py-3 px-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider" data-lang-key="col_brand"></th>
+                            <th class="py-3 px-4 text-right text-xs font-medium text-slate-500 uppercase tracking-wider" data-lang-key="col_unit_price"></th>
+                            <th class="py-3 px-4 text-center text-xs font-medium text-slate-500 uppercase tracking-wider" data-lang-key="col_quantity"></th>
+                            <th class="py-3 px-4 text-right text-xs font-medium text-slate-500 uppercase tracking-wider" data-lang-key="col_amount"></th>
+                            <th class="py-3 px-4 text-center text-xs font-medium text-slate-500 uppercase tracking-wider" data-lang-key="col_delivery"></th>
+                            <th class="py-3 px-4 text-center text-xs font-medium text-slate-500 uppercase tracking-wider" data-lang-key="col_status"></th>
+                            <th class="py-3 px-4 text-center text-xs font-medium text-slate-500 uppercase tracking-wider w-28"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-slate-200"></tbody>`;
+                
+                const tbody = table.querySelector('tbody');
+                appendChildren(project.itemTree, 0, tbody);
+
+                projectListContainer.appendChild(projectHeader);
+                tableContainer.appendChild(table);
+                projectListContainer.appendChild(tableContainer);
+            });
+            
+            updateLanguageText();
+        };
+
+        const updateLanguageText = () => {
+             document.querySelectorAll('[data-lang-key]').forEach(el => {
+                const key = el.dataset.langKey;
+                const replacements = JSON.parse(el.dataset.langParams || '{}');
+                el.innerText = getText(key, replacements);
+            });
+        }
+        
+        const renderCart = () => {
+            if (state.cart.length === 0) {
+                cartListBody.innerHTML = '';
+                cartEmptyMessage.classList.remove('hidden');
+                proceedToOrderBtn.disabled = true;
+                return;
+            }
+
+            cartEmptyMessage.classList.add('hidden');
+            cartListBody.innerHTML = '';
+            
+            state.cart.forEach(itemId => {
+                const item = allItems[itemId];
+                if (!item) return; // Guard against missing items
+                const tr = document.createElement('tr');
+                const isProjectItem = item.isProjectItem !== false;
+                
+                const projectInfo = isProjectItem ? `
+                    <div class="text-xs text-slate-500">${getText('col_project')}: ${getConfigurationPath(item, state.currentLang).split(' / ')[0]}</div>
+                    <div class="text-xs text-slate-500">${getText('col_config_path')}: ${getConfigurationPath(item, state.currentLang)}</div>
+                ` : `
+                    <div class="text-xs text-slate-500">${getText('col_project')}: -</div>
+                    <div class="text-xs text-slate-500">${getText('col_config_path')}: -</div>
+                `;
+
+                tr.innerHTML = `
+                    <td class="py-3 px-4">
+                        <input type="checkbox" data-id="${item.id}" class="cart-item-checkbox h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" ${state.cartSelection.has(item.id) ? 'checked' : ''}>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="text-sm font-medium text-slate-900">${item.name[state.currentLang]}</div>
+                        <div class="text-xs text-slate-500">${item.partNumber}</div>
+                        ${projectInfo}
+                        <div class="text-xs text-slate-500 mt-1">${getText('col_brand')}: ${item.brand} | ${getText('col_seller')}: ${getText(item.sellerKey)}</div>
+                    </td>
+                    <td class="py-3 px-4 text-sm text-slate-500 text-center">${item.qty}</td>
+                    <td class="py-3 px-4 text-sm text-slate-500 text-center">${getText('delivery_days', {days: item.deliveryDays})}</td>
+                    <td class="py-3 px-4 text-sm text-slate-500 text-right">${formatCurrency(item.price)}</td>
+                    <td class="py-3 px-4 text-sm text-slate-500 text-right">${formatCurrency(item.price * item.qty)}</td>
+                `;
+                cartListBody.appendChild(tr);
+            });
+            
+            cartSelectAll.checked = state.cart.length > 0 && state.cartSelection.size === state.cart.length;
+            proceedToOrderBtn.disabled = state.cartSelection.size === 0;
+        };
+
+        const updateCartBadge = () => {
+            const count = state.cart.length;
+            if (count > 0) {
+                cartItemCount.textContent = count;
+                cartItemCount.classList.remove('hidden');
+            } else {
+                cartItemCount.classList.add('hidden');
+            }
+        };
+
+        const updateOrderSummary = () => {
+            const subtotal = Array.from(state.cartSelection).reduce((acc, id) => {
+                const item = allItems[id];
+                if (item) {
+                    return acc + (item.price * item.qty);
+                }
+                return acc;
+            }, 0);
+            orderSubtotal.textContent = formatCurrency(subtotal);
+            orderTotal.textContent = formatCurrency(subtotal);
+        };
+        
+        const renderOrderItems = () => {
+            const method = document.querySelector('input[name="shipping-method"]:checked').value;
+            const items = Array.from(state.cartSelection).map(id => allItems[id]).filter(Boolean); // Filter out undefined items
+            orderItemsContainer.innerHTML = '';
+
+            const createItemHTML = (item) => `
+                <div class="flex items-start space-x-4 py-3">
+                    <img src="https://placehold.co/80x80/e2e8f0/334155?text=Item" alt="${item.name[state.currentLang]}" class="w-20 h-20 object-cover rounded-md">
+                    <div>
+                        <p class="font-semibold text-sm">${item.name[state.currentLang]}</p>
+                        <p class="text-xs text-slate-500">${item.partNumber}</p>
+                        <p class="text-xs text-slate-500 mt-1">${getText('col_brand')}: ${item.brand}</p>
+                        <p class="text-xs text-slate-500">${getText('col_seller')}: ${getText(item.sellerKey)}</p>
+                        <p class="text-sm mt-1">${formatCurrency(item.price)} x ${item.qty}</p>
+                    </div>
+                </div>
+            `;
+            
+            if (method === 'individual') {
+                const groupedByDate = items.reduce((acc, item) => {
+                    (acc[item.deliveryDays] = acc[item.deliveryDays] || []).push(item);
+                    return acc;
+                }, {});
+                const sortedDays = Object.keys(groupedByDate).sort((a, b) => a - b);
+                
+                sortedDays.forEach(days => {
+                    const deliveryDate = addBusinessDays(new Date(), parseInt(days));
+                    const groupContainer = document.createElement('div');
+                    groupContainer.className = 'bg-white p-6 rounded-lg shadow mb-6';
+                    groupContainer.innerHTML = `
+                        <h4 class="font-semibold text-md mb-2 border-b pb-2">${getText('delivery_est_date', { date: formatDate(deliveryDate) })}</h4>
+                        <div class="divide-y divide-slate-200">
+                           ${groupedByDate[days].map(createItemHTML).join('')}
+                        </div>`;
+                    orderItemsContainer.appendChild(groupContainer);
+                });
+            } else {
+                const groupContainer = document.createElement('div');
+                groupContainer.className = 'bg-white p-6 rounded-lg shadow';
+                let headerHTML = '';
+
+                if (method === 'consolidated' || method === 'scheduled') {
+                    const maxDays = Math.max(0, ...items.map(item => item.deliveryDays));
+                    const deliveryDate = addBusinessDays(new Date(), maxDays);
+                    headerHTML = `<h4 class="font-semibold text-md mb-2 border-b pb-2">${getText('delivery_est_consolidated', { date: formatDate(deliveryDate) })}</h4>`;
+                    if (method === 'scheduled') {
+                        headerHTML += `<div class="my-3"><label class="text-sm font-medium">${getText('specify_delivery_date_label')}: <input type="date" class="p-1 border rounded-md ml-2"></label></div>`;
+                    }
+                }
+                
+                let itemsHTML = '';
+                if (method === 'kitting' || method === 'unit_specific') {
+                    const maxDays = Math.max(0, ...items.map(item => item.deliveryDays));
+                    const deliveryDate = addBusinessDays(new Date(), maxDays);
+                    const headerTextKey = method === 'kitting' ? 'delivery_est_consolidated' : 'delivery_est_date';
+                     headerHTML = `<h4 class="font-semibold text-md mb-2 border-b pb-2">${getText(headerTextKey, { date: formatDate(deliveryDate) })}</h4>`;
+
+                    const groupedByUnit = items.reduce((acc, item) => {
+                        const topParentId = getTopParentId(item);
+                        (acc[topParentId] = acc[topParentId] || []).push(item);
+                        return acc;
+                    }, {});
+
+                    Object.keys(groupedByUnit).forEach(unitId => {
+                        const unitItem = allItems[unitId];
+                        const unitName = unitId === 'NP' ? 'その他' : (unitItem ? unitItem.name[state.currentLang] : 'Misc Parts');
+                        
+                        let unitDeliveryInfo = '';
+                        if (method === 'unit_specific') {
+                             const unitItems = groupedByUnit[unitId];
+                             const unitMaxDays = Math.max(0, ...unitItems.map(item => item.deliveryDays));
+                             const unitDeliveryDate = addBusinessDays(new Date(), unitMaxDays);
+                             unitDeliveryInfo = `<span class="text-sm font-normal text-slate-600 ml-4">(${getText('delivery_est_date', { date: formatDate(unitDeliveryDate) })})</span>`;
+                        }
+
+                        itemsHTML += `<h5 class="font-semibold text-sm mt-4 pt-4 border-t">${getText('kitting_unit_title', { unitName })} ${unitDeliveryInfo}</h5>`;
+                        itemsHTML += groupedByUnit[unitId].map(createItemHTML).join('');
+                    });
+
+                } else {
+                    itemsHTML = items.map(createItemHTML).join('');
+                }
+                
+                groupContainer.innerHTML = `${headerHTML}<div class="divide-y divide-slate-200">${itemsHTML}</div>`;
+                orderItemsContainer.appendChild(groupContainer);
+            }
+        };
+
+        // ===== MODAL LOGIC =====
+        let modalConfirmCallback = null;
+        let modalCancelCallback = null;
+
+        const showModal = ({ titleKey, messageKey, messageParams = {}, confirmKey, cancelKey, onConfirm, onCancel, singleButton = false }) => {
+            modalTitle.textContent = getText(titleKey);
+            modalMessage.textContent = getText(messageKey, messageParams);
+            modalConfirmBtn.textContent = getText(confirmKey);
+            
+            modalCancelBtn.classList.toggle('hidden', singleButton);
+            if (!singleButton) {
+                modalCancelBtn.textContent = getText(cancelKey);
+            }
+
+            modalConfirmCallback = onConfirm;
+            modalCancelCallback = onCancel;
+            
+            modalContainer.classList.remove('hidden');
+            modalContent.classList.add('opacity-100', 'scale-100');
+        };
+
+        const hideModal = () => {
+            modalContainer.classList.add('hidden');
+            modalConfirmCallback = null;
+            modalCancelCallback = null;
+        };
+
+        modalConfirmBtn.addEventListener('click', () => {
+            if (modalConfirmCallback) modalConfirmCallback();
+            hideModal();
+        });
+        modalCancelBtn.addEventListener('click', () => {
+            if (modalCancelCallback) modalCancelCallback();
+            hideModal();
+        });
+        modalContainer.addEventListener('click', (e) => {
+            if (e.target === modalContainer) hideModal();
+        });
+
+        // ===== EVENT LISTENERS =====
+
+        languageSwitcher.addEventListener('change', updateLanguage);
+
+        // --- Navigation ---
+        document.getElementById('nav-arrangement-list').addEventListener('click', (e) => { e.preventDefault(); showScreen('screen-arrangement-list'); });
+        document.getElementById('nav-cart').addEventListener('click', (e) => { e.preventDefault(); showScreen('screen-cart'); });
+        document.querySelectorAll('.back-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                showScreen(state.currentScreen === 'screen-order' ? 'screen-cart' : 'screen-arrangement-list');
+            });
+        });
+        
+        projectListContainer.addEventListener('click', (e) => {
+            const button = e.target.closest('.add-item-to-cart-btn');
+            if(!button) return;
+            
+            const itemId = button.dataset.id;
+            const item = allItems[itemId];
+            const itemsToAdd = new Set();
+            
+            if (item.children.length > 0) { // It's a unit
+                item.descendants.forEach(id => {
+                    if (allItems[id].status === 'unordered') itemsToAdd.add(id);
+                });
+            } else { // It's a part
+                if (item.status === 'unordered') itemsToAdd.add(itemId);
+            }
+
+            if (itemsToAdd.size === 0) return;
+
+             itemsToAdd.forEach(id => {
+                if (!state.cart.includes(id)) state.cart.push(id);
+            });
+            updateCartBadge();
+            renderCart();
+            
+            button.textContent = getText('status_added_to_cart');
+            button.disabled = true;
+            button.classList.remove('text-blue-600', 'hover:text-blue-800');
+            button.classList.add('text-green-600', 'cursor-default');
+        });
+        
+        // --- Cart Listeners ---
+        cartListBody.addEventListener('change', e => {
+            if (e.target.matches('.cart-item-checkbox')) {
+                const itemId = e.target.dataset.id;
+                if (e.target.checked) state.cartSelection.add(itemId);
+                else state.cartSelection.delete(itemId);
+                cartSelectAll.checked = state.cart.length > 0 && state.cartSelection.size === state.cart.length;
+                proceedToOrderBtn.disabled = state.cartSelection.size === 0;
+            }
+        });
+        
+        cartSelectAll.addEventListener('change', e => {
+            const checkboxes = cartListBody.querySelectorAll('.cart-item-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = e.target.checked;
+                if (e.target.checked) state.cartSelection.add(cb.dataset.id);
+                else state.cartSelection.delete(cb.dataset.id);
+            });
+            proceedToOrderBtn.disabled = state.cartSelection.size === 0;
+        });
+
+        proceedToOrderBtn.addEventListener('click', () => {
+            if (state.cartSelection.size > 0) {
+                updateOrderSummary();
+                renderOrderItems();
+                showScreen('screen-order');
+            }
+        });
+
+        // --- Order Form Listeners ---
+        shippingAddressSelect.addEventListener('change', (e) => {
+            newAddressForm.classList.toggle('hidden', e.target.value !== 'new');
+        });
+        shippingMethodOptions.addEventListener('change', renderOrderItems);
+        
+        confirmOrderBtn.addEventListener('click', () => {
+            showModal({
+                titleKey: 'modal_confirm_order_title',
+                messageKey: 'modal_confirm_order_message',
+                confirmKey: 'btn_confirm',
+                cancelKey: 'btn_cancel',
+                onConfirm: () => {
+                    const orderId = `P14-${Date.now()}`;
+                    state.cart = state.cart.filter(id => !state.cartSelection.has(id));
+                    state.cartSelection.clear();
+                    updateCartBadge();
+                    renderCart();
+                    showModal({
+                        titleKey: 'modal_order_complete_title',
+                        messageKey: 'modal_order_complete_message',
+                        messageParams: { orderId },
+                        confirmKey: 'btn_close',
+                        singleButton: true,
+                        onConfirm: () => showScreen('screen-arrangement-list')
+                    });
+                }
+            });
+        });
+
+        // ===== INITIALIZATION =====
+        const initialize = () => {
+             // Pre-populate cart with one non-project item for demonstration
+            state.cart.push('NP-01');
+            state.cartSelection.add('NP-01');
+            updateLanguage();
+            updateCartBadge();
+        };
+
+        initialize();
+
+    });
+    </script>
+
+</body>
+</html>
+
+

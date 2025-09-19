@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proto 14 - プロジェクトTOP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+        }
+        .tooltip {
+            position: absolute;
+            display: none;
+            padding: 8px;
+            background-color: #333;
+            color: white;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 10;
+            transform: translate(-50%, -120%);
+        }
+        .tooltip.visible {
+            display: block;
+        }
+        /* For dropdown transition */
+        .transition-enter { transition: opacity 0.1s ease-out, transform 0.1s ease-out; }
+        .transition-enter-from { opacity: 0; transform: scale(0.95); }
+        .transition-enter-to { opacity: 1; transform: scale(1); }
+        .transition-leave { transition: opacity 0.075s ease-in, transform 0.075s ease-in; }
+        .transition-leave-from { opacity: 1; transform: scale(1); }
+        .transition-leave-to { opacity: 0; transform: scale(0.95); }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- 全体コンテナ -->
+    <div id="app-container" class="min-h-screen flex flex-col">
+
+        <!-- ヘッダー -->
+        <header class="bg-white shadow-md sticky top-0 z-20">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <!-- サイトタイトル -->
+                    <div class="flex-shrink-0">
+                        <span class="text-2xl font-bold text-blue-600">Proto 14</span>
+                    </div>
+
+                    <!-- ナビゲーション & 言語切替 -->
+                    <div class="flex items-center space-x-4">
+                        <nav class="hidden md:flex items-center space-x-2">
+                            <a href="#" class="nav-item group relative p-2 rounded-full hover:bg-gray-100" data-tooltip-key="arrange_list">
+                                <i data-lucide="clipboard-list" class="w-6 h-6 text-gray-600"></i>
+                            </a>
+                            <a href="#" class="nav-item group relative p-2 rounded-full hover:bg-gray-100" data-tooltip-key="cart">
+                                <i data-lucide="shopping-cart" class="w-6 h-6 text-gray-600"></i>
+                            </a>
+                            <a href="#" class="nav-item group relative p-2 rounded-full hover:bg-gray-100" data-tooltip-key="order_history">
+                                <i data-lucide="history" class="w-6 h-6 text-gray-600"></i>
+                            </a>
+                            <a href="#" class="nav-item group relative p-2 rounded-full hover:bg-gray-100" data-tooltip-key="partners">
+                                <i data-lucide="users" class="w-6 h-6 text-gray-600"></i>
+                            </a>
+                            <a href="#" class="nav-item group relative p-2 rounded-full hover:bg-gray-100" data-tooltip-key="settings">
+                                <i data-lucide="settings" class="w-6 h-6 text-gray-600"></i>
+                            </a>
+                        </nav>
+
+                        <!-- 区切り線 -->
+                        <div class="hidden md:block w-px h-6 bg-gray-200"></div>
+
+                        <!-- 言語切替ドロップダウン -->
+                        <div class="relative" id="lang-dropdown-container">
+                            <button id="lang-dropdown-toggle" type="button" class="flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-gray-600 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" aria-expanded="false" aria-haspopup="true">
+                                <i data-lucide="globe" class="w-4 h-4 mr-2"></i>
+                                <span id="selected-lang-text">日本語</span>
+                                <i data-lucide="chevron-down" class="w-4 h-4 ml-1 text-gray-400"></i>
+                            </button>
+
+                            <div id="lang-dropdown-menu" class="hidden absolute right-0 mt-2 w-32 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="lang-dropdown-toggle">
+                                <div class="py-1" role="none">
+                                    <a href="#" class="lang-option text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem" data-lang="ja">日本語</a>
+                                    <a href="#" class="lang-option text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem" data-lang="en">English</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- メインコンテンツ -->
+        <main class="flex-grow container mx-auto p-4 sm:p-6 lg:p-8">
+            <div class="max-w-7xl mx-auto">
+                <!-- 戻るボタン -->
+                <div class="mb-6">
+                    <button class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                        <span data-lang-key="back">戻る</span>
+                    </button>
+                </div>
+
+                <!-- プロジェクト情報エリア -->
+                <div class="mb-8 p-6 bg-white rounded-xl shadow-sm ring-1 ring-gray-900/5">
+                    <h1 class="text-3xl font-bold text-gray-900" id="product-name"></h1>
+                    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm text-gray-600">
+                        <div>
+                            <span class="font-semibold" data-lang-key="project_name_label"></span>
+                            <span id="project-name"></span>
+                        </div>
+                        <div>
+                            <span class="font-semibold" data-lang-key="project_lead_label"></span>
+                            <span id="project-lead"></span>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- プロジェクト構成とタスク一覧 -->
+                <div id="project-structure" class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl">
+                    <!-- タスクリストのヘッダー -->
+                    <div class="grid grid-cols-12 gap-4 px-6 py-3 bg-gray-50 rounded-t-xl font-semibold text-sm text-gray-600 border-b border-gray-200">
+                        <div class="col-span-4" data-lang-key="th_component_task">構成 / タスク</div>
+                        <div class="col-span-3" data-lang-key="th_assignee">担当者</div>
+                        <div class="col-span-2" data-lang-key="th_status">進捗</div>
+                        <div class="col-span-3 text-right" data-lang-key="th_action">アクション</div>
+                    </div>
+                    <!-- タスクリスト本体がここに挿入される -->
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <!-- ツールチップ表示用エレメント -->
+    <div id="tooltip" class="tooltip"></div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- データ定義 ---
+
+            const projectData = {
+                productName: {
+                    ja: "ヒューマノイドロボット HR-01",
+                    en: "Humanoid Robot HR-01"
+                },
+                projectName: {
+                    ja: "製品試作 ver.01",
+                    en: "Product Prototype ver.01"
+                },
+                lead: {
+                    ja: "山田 太郎",
+                    en: "Taro Yamada"
+                },
+                structure: [
+                    {
+                        name: { ja: "頭部ユニット", en: "Head Unit" },
+                        tasks: [
+                            { name: { ja: "視覚センサー設計", en: "Vision Sensor Design" }, status: "not_started", assignee: { ja: "鈴木 一郎", en: "Ichiro Suzuki" } },
+                            { name: { ja: "音声認識モジュール調達", en: "Voice Recognition Module Procurement" }, status: "not_started", assignee: { ja: "佐藤 華子", en: "Hanako Sato" } },
+                            { name: { ja: "外装3Dプリント", en: "Exterior 3D Printing" }, status: "not_started", assignee: { ja: "田中 次郎", en: "Jiro Tanaka" } },
+                            { name: { ja: "組立", en: "Assembly" }, status: "not_started", assignee: { ja: "チームA", en: "Team A" } },
+                        ]
+                    },
+                    {
+                        name: { ja: "胴体ユニット", en: "Torso Unit" },
+                        tasks: [
+                            { name: { ja: "メインCPU選定・調達", en: "Main CPU Selection & Procurement" }, status: "not_started", assignee: { ja: "高橋 三郎", en: "Saburo Takahashi" } },
+                            { name: { ja: "バッテリーシステム設計", en: "Battery System Design" }, status: "not_started", assignee: { ja: "渡辺 四郎", en: "Shiro Watanabe" } },
+                            { name: { ja: "内部フレーム製作", en: "Internal Frame Fabrication" }, status: "not_started", assignee: { ja: "伊藤 五郎", en: "Goro Ito" } },
+                            { name: { ja: "配線・組立", en: "Wiring & Assembly" }, status: "not_started", assignee: { ja: "チームB", en: "Team B" } },
+                        ]
+                    },
+                    {
+                        name: { ja: "腕部ユニット (左右)", en: "Arm Unit (Left/Right)" },
+                        tasks: [
+                            { name: { ja: "アクチュエーター設計", en: "Actuator Design" }, status: "not_started", assignee: { ja: "山本 良子", en: "Yoshiko Yamamoto" } },
+                            { name: { ja: "マニピュレーター部品調達", en: "Manipulator Parts Procurement" }, status: "not_started", assignee: { ja: "佐藤 華子", en: "Hanako Sato" } },
+                            { name: { ja: "組立・動作テスト", en: "Assembly & Motion Test" }, status: "not_started", assignee: { ja: "チームC", en: "Team C" } },
+                        ]
+                    },
+                    {
+                        name: { ja: "脚部ユニット (左右)", en: "Leg Unit (Left/Right)" },
+                        tasks: [
+                            { name: { ja: "歩行制御アルゴリズム開発", en: "Gait Control Algorithm Development" }, status: "not_started", assignee: { ja: "中村 六郎", en: "Rokuro Nakamura" } },
+                            { name: { ja: "高出力モーター調達", en: "High-Power Motor Procurement" }, status: "not_started", assignee: { ja: "高橋 三郎", en: "Saburo Takahashi" } },
+                            { name: { ja: "バランスセンサー組込", en: "Balance Sensor Integration" }, status: "not_started", assignee: { ja: "渡辺 四郎", en: "Shiro Watanabe" } },
+                            { name: { ja: "組立・歩行テスト", en: "Assembly & Walking Test" }, status: "not_started", assignee: { ja: "チームD", en: "Team D" } },
+                        ]
+                    },
+                ]
+            };
+
+            const uiTexts = {
+                ja: {
+                    // ヘッダー
+                    arrange_list: '手配品リスト',
+                    cart: 'カート',
+                    order_history: '注文履歴',
+                    partners: '取引先リスト',
+                    settings: '設定',
+                    // メインコンテンツ
+                    back: '戻る',
+                    project_name_label: 'プロジェクト名:',
+                    project_lead_label: '責任者:',
+                    th_component_task: '構成 / タスク',
+                    th_assignee: '担当者',
+                    th_status: '進捗',
+                    th_action: 'アクション',
+                    task_start: 'タスクを開始',
+                    // ステータス
+                    not_started: '未着手',
+                },
+                en: {
+                    // Header
+                    arrange_list: 'Arrangement List',
+                    cart: 'Cart',
+                    order_history: 'Order History',
+                    partners: 'Partner List',
+                    settings: 'Settings',
+                    // Main Content
+                    back: 'Back',
+                    project_name_label: 'Project Name:',
+                    project_lead_label: 'Project Lead:',
+                    th_component_task: 'Component / Task',
+                    th_assignee: 'Assignee',
+                    th_status: 'Status',
+                    th_action: 'Action',
+                    task_start: 'Start Task',
+                    // Status
+                    not_started: 'Not Started',
+                }
+            };
+
+            // --- 初期化 ---
+
+            let currentLang = 'ja';
+            const projectStructureContainer = document.getElementById('project-structure');
+
+            // --- 関数定義 ---
+
+            // UIのテキストを現在の言語に更新
+            function updateUITexts() {
+                document.documentElement.lang = currentLang;
+                const elements = document.querySelectorAll('[data-lang-key]');
+                elements.forEach(el => {
+                    const key = el.dataset.langKey;
+                    if (uiTexts[currentLang][key]) {
+                        el.textContent = uiTexts[currentLang][key];
+                    }
+                });
+                
+                // プロジェクト情報を更新
+                document.getElementById('product-name').textContent = projectData.productName[currentLang];
+                document.getElementById('project-name').textContent = projectData.projectName[currentLang];
+                document.getElementById('project-lead').textContent = projectData.lead[currentLang];
+
+                // 言語ドロップダウンの表示テキストを更新
+                const selectedLangText = document.getElementById('selected-lang-text');
+                selectedLangText.textContent = currentLang === 'ja' ? '日本語' : 'English';
+
+                // タスクリストを再描画
+                renderProjectStructure();
+            }
+
+            // プロジェクト構成を描画
+            function renderProjectStructure() {
+                // 既存のタスクリストをクリア (ヘッダーは残す)
+                const existingLists = projectStructureContainer.querySelectorAll('.task-list-wrapper');
+                existingLists.forEach(list => list.remove());
+
+                // 新しいタスクリストを生成
+                projectData.structure.forEach(unit => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'task-list-wrapper';
+
+                    // ユニット名ヘッダー
+                    const unitHeader = document.createElement('div');
+                    unitHeader.className = 'px-6 py-4 border-t border-gray-200';
+                    unitHeader.innerHTML = `<h3 class="text-lg font-semibold text-gray-800">${unit.name[currentLang]}</h3>`;
+                    wrapper.appendChild(unitHeader);
+                    
+                    // タスクリスト
+                    const taskList = document.createElement('div');
+                    taskList.className = 'divide-y divide-gray-200';
+                    
+                    unit.tasks.forEach(task => {
+                        const taskRow = document.createElement('div');
+                        taskRow.className = 'grid grid-cols-12 gap-4 px-6 py-4 items-center';
+
+                        taskRow.innerHTML = `
+                            <div class="col-span-4 pl-4 text-sm text-gray-700">${task.name[currentLang]}</div>
+                            <div class="col-span-3 text-sm text-gray-700">${task.assignee[currentLang]}</div>
+                            <div class="col-span-2">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    ${uiTexts[currentLang][task.status]}
+                                </span>
+                            </div>
+                            <div class="col-span-3 text-right">
+                                <button class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    ${uiTexts[currentLang].task_start}
+                                </button>
+                            </div>
+                        `;
+                        taskList.appendChild(taskRow);
+                    });
+                    wrapper.appendChild(taskList);
+                    projectStructureContainer.appendChild(wrapper);
+                });
+            }
+
+
+            // ツールチップ処理
+            const tooltipElement = document.getElementById('tooltip');
+            const navItems = document.querySelectorAll('.nav-item');
+
+            navItems.forEach(item => {
+                item.addEventListener('mouseenter', (e) => {
+                    const key = item.dataset.tooltipKey;
+                    if (uiTexts[currentLang][key]) {
+                        tooltipElement.textContent = uiTexts[currentLang][key];
+                        const rect = item.getBoundingClientRect();
+                        tooltipElement.style.left = `${rect.left + rect.width / 2}px`;
+                        tooltipElement.style.top = `${rect.top}px`;
+                        tooltipElement.classList.add('visible');
+                    }
+                });
+
+                item.addEventListener('mouseleave', () => {
+                    tooltipElement.classList.remove('visible');
+                });
+            });
+
+            // --- 言語ドロップダウン処理 ---
+            const langDropdownContainer = document.getElementById('lang-dropdown-container');
+            const langDropdownToggle = document.getElementById('lang-dropdown-toggle');
+            const langDropdownMenu = document.getElementById('lang-dropdown-menu');
+            const langOptions = document.querySelectorAll('.lang-option');
+
+            // ドロップダウン開閉
+            langDropdownToggle.addEventListener('click', () => {
+                const isHidden = langDropdownMenu.classList.contains('hidden');
+                langDropdownToggle.setAttribute('aria-expanded', !isHidden);
+                langDropdownMenu.classList.toggle('hidden');
+            });
+            
+            // ドロップダウン外クリックで閉じる
+            window.addEventListener('click', (e) => {
+                if (!langDropdownContainer.contains(e.target)) {
+                    langDropdownMenu.classList.add('hidden');
+                    langDropdownToggle.setAttribute('aria-expanded', 'false');
+                }
+            });
+            
+            // 言語選択
+            langOptions.forEach(option => {
+                option.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const selectedLang = option.dataset.lang;
+                    if (selectedLang !== currentLang) {
+                        currentLang = selectedLang;
+                        updateUITexts();
+                    }
+                    langDropdownMenu.classList.add('hidden');
+                    langDropdownToggle.setAttribute('aria-expanded', 'false');
+                });
+            });
+
+
+            // --- 初期実行 ---
+            
+            lucide.createIcons();
+            updateUITexts();
+
+        });
+    </script>
+
+</body>
+</html>

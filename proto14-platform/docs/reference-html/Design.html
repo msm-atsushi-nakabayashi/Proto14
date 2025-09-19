@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proto 14 - 設計・試作</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: #f8fafc; /* cool-gray-50 */
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: #1f2937; /* gray-800 */
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        .tag-selected {
+            background-color: #3b82f6 !important; /* blue-500 */
+            color: white !important;
+            border-color: #3b82f6 !important;
+        }
+        /* ドラッグ&ドロップエリアのハイライト */
+        .drag-over {
+            border-color: #3b82f6;
+            background-color: #eff6ff; /* blue-50 */
+        }
+        /* カスタムスクロールバー */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; /* cool-gray-100 */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; /* cool-gray-300 */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; /* cool-gray-400 */
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- 全体コンテナ -->
+    <div id="app" class="min-h-screen flex flex-col">
+
+        <!-- ヘッダー -->
+        <header class="bg-white shadow-md sticky top-0 z-40">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold text-blue-600">Proto 14</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <nav class="hidden md:flex items-center space-x-4">
+                            <div class="tooltip">
+                                <button class="p-2 rounded-full hover:bg-gray-100 text-gray-600">
+                                    <i data-lucide="clipboard-list"></i>
+                                </button>
+                                <span class="tooltiptext" data-lang="tooltip_arrangement_list">手配品リスト</span>
+                            </div>
+                            <div class="tooltip">
+                                <button class="p-2 rounded-full hover:bg-gray-100 text-gray-600">
+                                    <i data-lucide="shopping-cart"></i>
+                                </button>
+                                <span class="tooltiptext" data-lang="tooltip_cart">カート</span>
+                            </div>
+                            <div class="tooltip">
+                                <button class="p-2 rounded-full hover:bg-gray-100 text-gray-600">
+                                    <i data-lucide="history"></i>
+                                </button>
+                                <span class="tooltiptext" data-lang="tooltip_order_history">注文履歴</span>
+                            </div>
+                            <div class="tooltip">
+                                <button class="p-2 rounded-full hover:bg-gray-100 text-gray-600">
+                                    <i data-lucide="users"></i>
+                                </button>
+                                <span class="tooltiptext" data-lang="tooltip_suppliers">取引先リスト</span>
+                            </div>
+                            <div class="tooltip">
+                                <button class="p-2 rounded-full hover:bg-gray-100 text-gray-600">
+                                    <i data-lucide="settings"></i>
+                                </button>
+                                <span class="tooltiptext" data-lang="tooltip_settings">設定</span>
+                            </div>
+                        </nav>
+                        <div class="relative">
+                            <select id="lang-switcher" class="pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="ja">日本語</option>
+                                <option value="en">English</option>
+                            </select>
+                            <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                                <i data-lucide="globe" class="text-gray-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- メインコンテンツ -->
+        <main class="flex-grow container mx-auto p-4 sm:p-6 lg:p-8">
+            <!-- 戻るボタンエリア -->
+            <div id="back-button-container" class="mb-4 hidden">
+                <button id="back-button" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <i data-lucide="arrow-left" class="mr-2 -ml-1 h-5 w-5"></i>
+                    <span data-lang="back_button">戻る</span>
+                </button>
+            </div>
+
+            <!-- 初期選択画面 -->
+            <div id="initial-view" class="text-center">
+                <h2 class="text-2xl font-bold mb-2" data-lang="initial_title">設計・試作</h2>
+                <p class="text-lg text-gray-600 mb-8" data-lang="initial_subtitle">見積依頼先の選定方法を選択してください</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                    <button data-view="ai" class="view-changer flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border-2 border-transparent hover:border-blue-500">
+                        <i data-lucide="brain-circuit" class="w-12 h-12 text-blue-600 mb-3"></i>
+                        <span class="font-semibold" data-lang="menu_ai">AIレコメンド</span>
+                    </button>
+                    <button data-view="case-study" class="view-changer flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border-2 border-transparent hover:border-blue-500">
+                        <i data-lucide="book-open-check" class="w-12 h-12 text-blue-600 mb-3"></i>
+                        <span class="font-semibold" data-lang="menu_case_study">事例で選ぶ</span>
+                    </button>
+                    <button id="partner-list-menu-button" class="flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border-2 border-transparent hover:border-blue-500">
+                        <i data-lucide="list-filter" class="w-12 h-12 text-blue-600 mb-3"></i>
+                        <span class="font-semibold" data-lang="menu_partner_list">パートナーリストから選ぶ</span>
+                    </button>
+                    <button data-view="past-suppliers" class="view-changer flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border-2 border-transparent hover:border-blue-500">
+                        <i data-lucide="rotate-ccw" class="w-12 h-12 text-blue-600 mb-3"></i>
+                        <span class="font-semibold" data-lang="menu_past_suppliers">過去の取引先から選ぶ</span>
+                    </button>
+                    <button data-view="special-feature" class="view-changer flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border-2 border-transparent hover:border-blue-500">
+                        <i data-lucide="newspaper" class="w-12 h-12 text-blue-600 mb-3"></i>
+                        <span class="font-semibold" data-lang="menu_special_feature">特集記事から依頼</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- AIレコメンド画面 -->
+            <div id="ai-view" class="hidden">
+                <h2 class="text-2xl font-bold mb-4" data-lang="ai_title">AIレコメンド</h2>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div id="ai-chat-box" class="h-96 overflow-y-auto mb-4 p-4 border rounded-md bg-gray-50 flex flex-col space-y-4">
+                        <div class="flex items-start space-x-3">
+                            <div class="p-2 bg-blue-500 text-white rounded-full flex-shrink-0">
+                                <i data-lucide="brain-circuit" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <p class="bg-blue-100 text-blue-800 rounded-lg p-3 inline-block" data-lang="ai_greeting">
+                                    こんにちは。委託したい製品・ユニットや、探したい事例の要件などをテキストやファイルで教えてください。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <textarea id="ai-input" class="flex-grow p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder-lang="ai_placeholder" rows="2"></textarea>
+                        <div id="ai-drop-zone" class="p-4 border-2 border-dashed rounded-md text-center cursor-pointer hover:bg-gray-100">
+                            <i data-lucide="upload-cloud" class="w-8 h-8 mx-auto text-gray-400"></i>
+                            <p class="text-xs text-gray-500" data-lang="file_upload_prompt">ファイルをドロップ</p>
+                        </div>
+                        <button id="ai-send-button" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700">
+                            <span data-lang="send_button">送信</span>
+                        </button>
+                    </div>
+                    <div id="ai-recommendations" class="mt-6 hidden">
+                        <!-- Recommendation list will be inserted here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 事例で選ぶ画面 -->
+            <div id="case-study-view" class="hidden">
+                 <h2 class="text-2xl font-bold mb-4" data-lang="case_study_title">事例で選ぶ</h2>
+                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2" data-lang="case_study_spec_label">開発する製品やユニットの仕様</label>
+                            <textarea id="case-study-spec-input" class="w-full p-2 border rounded-md" rows="3" placeholder-lang="case_study_spec_placeholder"></textarea>
+                            <div id="case-study-drop-zone" class="mt-2 p-4 border-2 border-dashed rounded-md text-center cursor-pointer hover:bg-gray-100">
+                                <i data-lucide="upload-cloud" class="w-8 h-8 mx-auto text-gray-400"></i>
+                                <p class="text-xs text-gray-500" data-lang="file_upload_prompt_alt">ファイルで仕様をアップロード (ドラッグ&ドロップ可)</p>
+                            </div>
+                        </div>
+                        <div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2" data-lang="case_study_industry_label">業界</label>
+                                <div class="flex flex-wrap gap-2" id="industry-tags"></div>
+                            </div>
+                            <div class="mt-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2" data-lang="case_study_content_label">委託内容</label>
+                                <div class="flex flex-wrap gap-2" id="content-tags"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 text-center">
+                        <button id="search-cases-button" class="px-8 py-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700">
+                            <span data-lang="search_cases_button">事例を探す</span>
+                        </button>
+                    </div>
+                 </div>
+                 <div id="case-study-results" style="display: none;">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-center space-x-4">
+                           <div class="flex items-center">
+                                <input id="favorite-filter-checkbox" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                <label for="favorite-filter-checkbox" class="ml-2 block text-sm text-gray-900" data-lang="show_favorites_only">お気に入りのみ表示</label>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <label for="sort-order" class="mr-2 text-sm font-medium text-gray-700" data-lang="sort_by">表示順:</label>
+                            <select id="sort-order" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                <option value="recommended" data-lang="sort_recommended">おすすめ順</option>
+                                <option value="projects" data-lang="sort_projects">案件数順</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="case-study-list" class="space-y-6">
+                        <!-- Case study items will be appended here -->
+                    </div>
+                 </div>
+            </div>
+
+            <!-- パートナーリストから選ぶ画面 -->
+            <div id="partner-list-view" class="hidden">
+                 <h2 class="text-2xl font-bold mb-4" data-lang="partner_list_title">パートナーリストから選ぶ</h2>
+                 <main class="w-full">
+                     <div id="partner-list-container" class="space-y-6">
+                         <!-- Partner items will be appended here -->
+                     </div>
+                 </main>
+            </div>
+            
+            <!-- 過去の取引先から選ぶ画面 -->
+            <div id="past-suppliers-view" class="hidden">
+                <h2 class="text-2xl font-bold mb-4" data-lang="past_suppliers_title">過去の取引先から選ぶ</h2>
+                <div class="space-y-6" id="past-suppliers-list">
+                    <!-- Past supplier items will be appended here -->
+                </div>
+            </div>
+
+            <!-- 特集記事から依頼画面 (Placeholder) -->
+            <div id="special-feature-view" class="hidden">
+                <h2 class="text-2xl font-bold mb-4" data-lang="special_feature_title">特集記事から依頼</h2>
+                <div class="bg-white p-10 rounded-lg shadow-md text-center">
+                    <i data-lucide="construct" class="w-16 h-16 mx-auto text-gray-400 mb-4"></i>
+                    <p class="text-gray-600" data-lang="under_construction">このページは現在準備中です。</p>
+                </div>
+            </div>
+
+            <!-- 見積コミュニケーション画面 -->
+            <div id="communication-view" class="hidden">
+                <h2 class="text-2xl font-bold mb-1"><span data-lang="communication_title_prefix"></span> <span id="comm-partner-name"></span></h2>
+                <div class="flex items-center space-x-6 text-sm text-gray-600 mb-4 border-b pb-4">
+                    <div>
+                        <span class="font-semibold" data-lang="product_name_label"></span>
+                        <span id="comm-product-name">高精度ギアボックス Ver.3</span>
+                    </div>
+                    <div>
+                        <span class="font-semibold" data-lang="project_name_label"></span>
+                        <span id="comm-project-name">Project-A-002</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="bg-white p-4 rounded-lg shadow-md">
+                            <h3 class="text-lg font-semibold mb-2" data-lang="chat_title">チャット</h3>
+                            <div class="h-64 overflow-y-auto border rounded-md p-3 bg-gray-50 mb-2 flex flex-col space-y-4">
+                                <!-- Dummy Chat -->
+                                <div class="flex items-start space-x-3">
+                                    <div class="p-2 bg-blue-500 text-white rounded-full flex-shrink-0">
+                                        <i data-lucide="user-cog" class="w-6 h-6"></i>
+                                    </div>
+                                    <div>
+                                        <p class="bg-blue-100 text-blue-800 rounded-lg p-3 inline-block" data-lang="chat_msg_1"></p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start space-x-3 justify-end">
+                                    <div>
+                                        <p class="bg-green-100 text-green-800 rounded-lg p-3 inline-block" data-lang="chat_msg_2"></p>
+                                    </div>
+                                    <div class="p-2 bg-gray-500 text-white rounded-full flex-shrink-0">
+                                        <i data-lucide="user" class="w-6 h-6"></i>
+                                    </div>
+                                </div>
+                                <!-- End Dummy Chat -->
+                            </div>
+                            <div class="flex">
+                                <input type="text" placeholder-lang="chat_placeholder" class="flex-grow border-gray-300 rounded-l-md focus:ring-blue-500 focus:border-blue-500">
+                                <button class="bg-blue-600 text-white px-4 rounded-r-md hover:bg-blue-700" data-lang="send_button">送信</button>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-md">
+                             <h3 class="text-lg font-semibold mb-2" data-lang="file_share_title">ファイル共有</h3>
+                             <div class="border rounded-md p-3 h-64 overflow-y-auto">
+                                 <ul class="space-y-1">
+                                     <li><a href="#" class="flex items-center p-1 rounded hover:bg-gray-100"><i data-lucide="folder" class="w-4 h-4 mr-2 text-yellow-500"></i> <span class="text-sm" data-lang="folder_spec"></span></a></li>
+                                     <li><a href="#" class="flex items-center p-1 rounded hover:bg-gray-100"><i data-lucide="folder" class="w-4 h-4 mr-2 text-yellow-500"></i> <span class="text-sm" data-lang="folder_ref"></span></a></li>
+                                     <li><a href="#" class="flex items-center p-1 rounded hover:bg-gray-100"><i data-lucide="file-text" class="w-4 h-4 mr-2 text-gray-500"></i> <span class="text-sm" data-lang="file_readme"></span></a></li>
+                                 </ul>
+                             </div>
+                        </div>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="bg-white p-4 rounded-lg shadow-md">
+                            <h3 class="text-lg font-semibold mb-2" data-lang="meeting_title">オンライン会議</h3>
+                            <button class="w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 mb-3" data-lang="schedule_meeting_button">会議を予約</button>
+                            <div class="space-y-2">
+                                <div class="border p-2 rounded-md text-sm">
+                                    <p class="font-semibold" data-lang="kickoff_meeting"></p>
+                                    <p class="text-gray-600">2025/09/20 10:00 - 10:30</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-md sticky top-20">
+                             <h3 class="text-lg font-semibold mb-2" data-lang="quotation_title">見積回答</h3>
+                             <div class="overflow-x-auto">
+                                <table class="w-full text-sm text-left">
+                                    <thead class="bg-gray-100">
+                                        <tr>
+                                            <th class="p-2"></th>
+                                            <th class="p-2" data-lang="quote_item">項目</th>
+                                            <th class="p-2" data-lang="quote_price">単価</th>
+                                            <th class="p-2" data-lang="quote_qty">数量</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b">
+                                            <td class="p-2"><input type="checkbox" class="h-4 w-4"></td>
+                                            <td class="p-2" data-lang="quote_item_1"></td>
+                                            <td class="p-2">¥150,000</td>
+                                            <td class="p-2"><input type="number" value="1" class="w-16 p-1 border rounded-md"></td>
+                                        </tr>
+                                        <tr class="border-b">
+                                            <td class="p-2"><input type="checkbox" class="h-4 w-4"></td>
+                                            <td class="p-2" data-lang="quote_item_2"></td>
+                                            <td class="p-2">¥80,000</td>
+                                            <td class="p-2"><input type="number" value="2" class="w-16 p-1 border rounded-md"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <button class="inline-flex items-center justify-center w-full px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                    <i data-lucide="download" class="mr-2 h-4 w-4"></i>
+                                    <span data-lang="download_quotation"></span>
+                                </button>
+                                <button class="inline-flex items-center justify-center w-full px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                    <i data-lucide="download" class="mr-2 h-4 w-4"></i>
+                                    <span data-lang="download_requirements"></span>
+                                </button>
+                            </div>
+                             <button id="add-to-list-button" class="w-full mt-3 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700" data-lang="add_to_arrangement_list"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 汎用モーダルウィンドウ -->
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h3 id="modal-title" class="text-lg font-medium leading-6 text-gray-900"></h3>
+            <div class="mt-2">
+                <p id="modal-body" class="text-sm text-gray-500"></p>
+            </div>
+            <div class="mt-4 flex justify-end space-x-3">
+                <button id="modal-cancel" type="button" class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50" data-lang="cancel_button">キャンセル</button>
+                <button id="modal-confirm" type="button" class="px-4 py-2 bg-blue-600 text-white border border-transparent rounded-md hover:bg-blue-700" data-lang="confirm_button">確認</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- パートナー絞り込みモーダル -->
+    <div id="partner-filter-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg">
+            <h3 class="text-lg font-semibold mb-4" data-lang="filter_title">絞り込み</h3>
+            <div class="space-y-4 max-h-[60vh] overflow-y-auto p-2">
+               <div>
+                   <label class="block text-sm font-medium text-gray-700" data-lang="partner_industry_label">得意な業界</label>
+                   <div class="mt-2 space-y-1" id="partner-industry-filters-modal"></div>
+               </div>
+               <div>
+                   <label class="block text-sm font-medium text-gray-700" data-lang="partner_service_label">対応可能な委託内容</label>
+                   <div class="mt-2 space-y-1" id="partner-service-filters-modal"></div>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button id="partner-filter-modal-cancel" type="button" class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50" data-lang="cancel_button">キャンセル</button>
+                <button id="partner-filter-modal-confirm" type="button" class="px-4 py-2 bg-blue-600 text-white border border-transparent rounded-md hover:bg-blue-700" data-lang="show_partner_list_button">パートナーリストを表示</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const uiStrings = {
+                ja: {
+                    tooltip_arrangement_list: '手配品リスト', tooltip_cart: 'カート', tooltip_order_history: '注文履歴', tooltip_suppliers: '取引先リスト', tooltip_settings: '設定',
+                    back_button: '戻る',
+                    initial_title: '設計・試作', initial_subtitle: '見積依頼先の選定方法を選択してください',
+                    menu_ai: 'AIレコメンド', menu_case_study: '事例で選ぶ', menu_partner_list: 'パートナーリストから選ぶ', menu_past_suppliers: '過去の取引先から選ぶ', menu_special_feature: '特集記事から依頼',
+                    ai_title: 'AIレコメンド', ai_greeting: 'こんにちは。委託したい製品・ユニットや、探したい事例の要件などをテキストやファイルで教えてください。', ai_placeholder: '例: 小型IoTデバイスの筐体設計と試作を依頼したい。材質はABSで、防水性能IPX7が要件。',
+                    send_button: '送信', file_upload_prompt: 'ファイルをドロップ', file_upload_prompt_alt: 'ファイルで仕様をアップロード (ドラッグ&ドロップ可)',
+                    ai_recommendation_title: 'AIからの提案パートナー',
+                    case_study_title: '事例で選ぶ', case_study_spec_label: '開発する製品やユニットの仕様', case_study_spec_placeholder: '製品・ユニットの要件、目的、解決したい課題などを入力してください。', case_study_industry_label: '業界', case_study_content_label: '委託内容', search_cases_button: '事例を探す',
+                    show_favorites_only: 'お気に入りのみ表示', sort_by: '表示順:', sort_recommended: 'おすすめ順', sort_projects: '案件数順', request_quotation: '見積依頼',
+                    partner_list_title: 'パートナーリストから選ぶ', filter_title: '絞り込み', partner_industry_label: '得意な業界', partner_service_label: '対応可能な委託内容', show_partner_list_button: 'パートナーリストを表示',
+                    past_suppliers_title: '過去の取引先から選ぶ',
+                    quote_実績: '見積依頼実績', order_実績: '注文実績', late_delivery_rate: '納期遅延率', claim_rate: 'クレーム発生率',
+                    special_feature_title: '特集記事から依頼', under_construction: 'このページは現在準備中です。',
+                    communication_title_prefix: '見積コミュニケーション:', chat_title: 'チャット', chat_placeholder: 'メッセージを入力...', file_share_title: 'ファイル共有', meeting_title: 'オンライン会議', schedule_meeting_button: '会議を予約',
+                    quotation_title: '見積回答', quote_item: '項目', quote_price: '単価', quote_qty: '数量',
+                    add_to_arrangement_list: '手配リストへ反映', add_to_cart: 'カートに反映',
+                    cancel_button: 'キャンセル', confirm_button: '確認',
+                    industry_tags: { 'industrial': '産業機械', 'medical': '医療機器', 'iot': 'IoT', 'robot': 'ロボット', 'aerospace': '航空宇宙' },
+                    content_tags: { 'design': '設計', 'prototype': '試作', 'assembly': '組立', 'testing': '試験', 'packing': '梱包' },
+                    partner_industry_filters: { 'industrial': '産業機械', 'medical': '医療機器', 'iot': 'IoT', 'robot': 'ロボット', 'aerospace': '航空宇宙' },
+                    partner_service_filters: { 'design': '設計', 'prototype': '試作', 'assembly': '組立', 'testing': '試験' },
+                    download_quotation: '見積書 DL', download_requirements: '製品要件書 DL',
+                    chat_msg_1: 'お世話になっております。株式会社テックデザインの佐藤です。この度は見積依頼ありがとうございます。仕様書を確認いたしました。',
+                    chat_msg_2: 'こちらこそ、よろしくお願いいたします。内容について2点ほど質問があります。',
+                    folder_spec: '01_仕様書', folder_ref: '02_参考資料', file_readme: 'Readme.txt',
+                    partner_desc_1: '最新の3D-CADとCAE解析を駆使し、高品質な筐体設計を提供します。',
+                    partner_desc_2: '医療機器基準に準拠した高精度な試作品を短納期で実現します。',
+                    partner_desc_3: '小ロットから量産まで、柔軟な組立ラインで対応可能です。',
+                    case_title_1: '自動搬送ロボット用 高耐久性筐体',
+                    case_app_1: '倉庫内自動搬送', case_service_1: '設計', case_mat_1: 'アルミニウム', case_lead_1: '3週間',
+                    case_title_2: 'ウェアラブルヘルスケアデバイス',
+                    case_app_2: '生体データ監視', case_service_2: '試作', case_mat_2: '生体適合性樹脂', case_lead_2: '2週間',
+                    case_title_3: '屋外設置型IoT環境センサー',
+                    case_app_3: '農業環境モニタリング', case_service_3: '設計・試作', case_mat_3: 'ABS (IP67準拠)', case_lead_3: '4週間',
+                    supplier_comment_1: '毎回、納期通りに高品質な成果物を出してくれる。コミュニケーションもスムーズ。',
+                    supplier_comment_2: '品質は良いが、コストがやや高め。大規模なプロジェクト向きかもしれない。',
+                    supplier_comment_3: '組立精度は高いが、たまに連絡が遅れることがある。',
+                    partner_name_1: '株式会社テックデザイン', partner_name_2: '未来試作工房', partner_name_3: 'アッセンブリ・ソリューションズ',
+                    author_name_1: '山田 太郎', author_name_2: '佐藤 花子', author_name_3: '鈴木 次郎',
+                    contact_button: '問合せ', times_unit: '回',
+                    kickoff_meeting: 'キックオフミーティング',
+                    quote_item_1: '筐体設計', quote_item_2: '試作品製作(A)',
+                    product_name_label: '製品名:', project_name_label: 'プロジェクト名:',
+                    case_label_application: '用途',
+                    case_label_industry: '業界',
+                    case_label_service: 'サービスカテゴリ',
+                    case_label_size: '製品サイズ',
+                    case_label_material: '材料名',
+                    case_label_lead_time: 'リードタイム(参考)',
+                    case_label_partner: 'パートナー'
+                },
+                en: {
+                    tooltip_arrangement_list: 'Arrangement List', tooltip_cart: 'Cart', tooltip_order_history: 'Order History', tooltip_suppliers: 'Supplier List', tooltip_settings: 'Settings',
+                    back_button: 'Back',
+                    initial_title: 'Design & Prototyping', initial_subtitle: 'Please select a method to choose a quotation supplier.',
+                    menu_ai: 'AI Recommend', menu_case_study: 'Select by Case Study', menu_partner_list: 'Select from Partner List', menu_past_suppliers: 'Select from Past Suppliers', menu_special_feature: 'Request from Special Feature',
+                    ai_title: 'AI Recommend', ai_greeting: 'Hello. Please tell me about the product/unit you want to commission or the case study you are looking for via text or file.', ai_placeholder: 'e.g., I want to request the design and prototype of a small IoT device enclosure. The material should be ABS with a waterproof rating of IPX7.',
+                    send_button: 'Send', file_upload_prompt: 'Drop file here', file_upload_prompt_alt: 'Upload specifications by file (Drag & Drop available)',
+                    ai_recommendation_title: 'AI Recommended Partners',
+                    case_study_title: 'Select by Case Study', case_study_spec_label: 'Specifications of the product or unit to be developed', case_study_spec_placeholder: 'Enter product/unit requirements, objectives, issues to be solved, etc.', case_study_industry_label: 'Industry', case_study_content_label: 'Consignment Details', search_cases_button: 'Search for Case Studies',
+                    show_favorites_only: 'Show favorites only', sort_by: 'Sort by:', sort_recommended: 'Recommended', sort_projects: 'No. of Projects', request_quotation: 'Request Quotation',
+                    partner_list_title: 'Select from Partner List', filter_title: 'Filter', partner_industry_label: 'Specialized Industry', partner_service_label: 'Available Services', show_partner_list_button: 'Show Partner List',
+                    past_suppliers_title: 'Select from Past Suppliers',
+                    quote_実績: 'Quotation History', order_実績: 'Order History', late_delivery_rate: 'Late Delivery Rate', claim_rate: 'Claim Rate',
+                    special_feature_title: 'Request from Special Feature', under_construction: 'This page is currently under construction.',
+                    communication_title_prefix: 'Quotation Communication:', chat_title: 'Chat', chat_placeholder: 'Enter message...', file_share_title: 'File Sharing', meeting_title: 'Online Meetings', schedule_meeting_button: 'Schedule a Meeting',
+                    quotation_title: 'Quotation Response', quote_item: 'Item', quote_price: 'Unit Price', quote_qty: 'Qty',
+                    add_to_arrangement_list: 'Add to Arrangement List', add_to_cart: 'Add to Cart',
+                    cancel_button: 'Cancel', confirm_button: 'Confirm',
+                    industry_tags: { 'industrial': 'Industrial Machinery', 'medical': 'Medical Devices', 'iot': 'IoT', 'robot': 'Robots', 'aerospace': 'Aerospace' },
+                    content_tags: { 'design': 'Design', 'prototype': 'Prototyping', 'assembly': 'Assembly', 'testing': 'Testing', 'packing': 'Packing' },
+                    partner_industry_filters: { 'industrial': 'Industrial Machinery', 'medical': 'Medical Devices', 'iot': 'IoT', 'robot': 'Robots', 'aerospace': 'Aerospace' },
+                    partner_service_filters: { 'design': 'Design', 'prototype': 'Prototyping', 'assembly': 'Assembly', 'testing': 'Testing' },
+                    download_quotation: 'Download Quotation', download_requirements: 'Download Requirements',
+                    chat_msg_1: 'Thank you for your inquiry. This is Sato from Tech Design Inc. We have received your request for a quotation and have reviewed the specifications.',
+                    chat_msg_2: 'Thank you for your prompt response. I have a couple of questions regarding the details.',
+                    folder_spec: '01_Specifications', folder_ref: '02_Reference_Materials', file_readme: 'Readme.txt',
+                    partner_desc_1: 'We provide high-quality enclosure designs using the latest 3D-CAD and CAE analysis.',
+                    partner_desc_2: 'We deliver high-precision prototypes compliant with medical device standards on a short lead time.',
+                    partner_desc_3: 'We can handle everything from small lots to mass production with our flexible assembly line.',
+                    case_title_1: 'High-Durability Enclosure for Autonomous Mobile Robot',
+                    case_app_1: 'Warehouse automated transport', case_service_1: 'Design', case_mat_1: 'Aluminum', case_lead_1: '3 Weeks',
+                    case_title_2: 'Wearable Healthcare Device',
+                    case_app_2: 'Biometric data monitoring', case_service_2: 'Prototyping', case_mat_2: 'Biocompatible resin', case_lead_2: '2 Weeks',
+                    case_title_3: 'Outdoor IoT Environmental Sensor',
+                    case_app_3: 'Agricultural environment monitoring', case_service_3: 'Design & Prototyping', case_mat_3: 'ABS (IP67 compliant)', case_lead_3: '4 Weeks',
+                    supplier_comment_1: 'They always deliver high-quality work on time. Communication is also very smooth.',
+                    supplier_comment_2: 'The quality is good, but the cost is a bit high. It might be suitable for large-scale projects.',
+                    supplier_comment_3: 'The assembly precision is high, but sometimes communication can be slow.',
+                    partner_name_1: 'Tech Design Inc.', partner_name_2: 'Future Prototyping Workshop', partner_name_3: 'Assembly Solutions',
+                    author_name_1: 'Taro Yamada', author_name_2: 'Hanako Sato', author_name_3: 'Jiro Suzuki',
+                    contact_button: 'Contact', times_unit: ' times',
+                    kickoff_meeting: 'Kick-off Meeting',
+                    quote_item_1: 'Enclosure Design', quote_item_2: 'Prototype Production (A)',
+                    product_name_label: 'Product:', project_name_label: 'Project:',
+                    case_label_application: 'Application',
+                    case_label_industry: 'Industry',
+                    case_label_service: 'Service Category',
+                    case_label_size: 'Product Size',
+                    case_label_material: 'Material Name',
+                    case_label_lead_time: 'Lead Time (Ref.)',
+                    case_label_partner: 'Partner'
+                }
+            };
+
+            let currentLang = 'ja';
+            let currentView = 'initial';
+            let favoriteCases = new Set();
+            let fromQuickStart = false;
+
+            const langSwitcher = document.getElementById('lang-switcher');
+            const viewChangers = document.querySelectorAll('.view-changer');
+            const allViews = document.querySelectorAll('main > div[id$="-view"]');
+            const backButton = document.getElementById('back-button');
+            const backButtonContainer = document.getElementById('back-button-container');
+            const searchCasesButton = document.getElementById('search-cases-button');
+            const caseStudyResults = document.getElementById('case-study-results');
+            const favoriteFilterCheckbox = document.getElementById('favorite-filter-checkbox');
+            
+            const aiSendButton = document.getElementById('ai-send-button');
+            const aiRecommendations = document.getElementById('ai-recommendations');
+            
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+            const modalConfirm = document.getElementById('modal-confirm');
+            const modalCancel = document.getElementById('modal-cancel');
+
+            const partnerFilterModal = document.getElementById('partner-filter-modal');
+            const partnerFilterModalConfirm = document.getElementById('partner-filter-modal-confirm');
+            const partnerFilterModalCancel = document.getElementById('partner-filter-modal-cancel');
+            const partnerListMenuButton = document.getElementById('partner-list-menu-button');
+            
+            function showModal(title, body, onConfirm) {
+                modalTitle.textContent = title;
+                modalBody.textContent = body;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                modalConfirm.onclick = () => { onConfirm(); hideModal(); };
+            }
+            function hideModal() {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                modalConfirm.onclick = null;
+            }
+            modalCancel.addEventListener('click', hideModal);
+
+            const showPartnerFilterModal = () => {
+                partnerFilterModal.classList.remove('hidden');
+                partnerFilterModal.classList.add('flex');
+            };
+            const hidePartnerFilterModal = () => {
+                partnerFilterModal.classList.add('hidden');
+                partnerFilterModal.classList.remove('flex');
+            };
+            partnerFilterModalCancel.addEventListener('click', hidePartnerFilterModal);
+            partnerListMenuButton.addEventListener('click', showPartnerFilterModal);
+            partnerFilterModalConfirm.addEventListener('click', () => {
+                hidePartnerFilterModal();
+                changeView('partner-list');
+            });
+
+            const generateTags = (containerId, tags) => {
+                const container = document.getElementById(containerId);
+                if(container.children.length > 0 && container.dataset.initialized) return;
+                container.innerHTML = '';
+                Object.entries(tags).forEach(([key, value]) => {
+                    const tag = document.createElement('span');
+                    tag.className = 'cursor-pointer px-3 py-1 border rounded-full text-sm bg-gray-100 text-gray-700 hover:bg-gray-200';
+                    tag.dataset.tag = key;
+                    tag.textContent = value;
+                    tag.addEventListener('click', () => tag.classList.toggle('tag-selected'));
+                    container.appendChild(tag);
+                });
+                container.dataset.initialized = "true";
+            };
+
+            const generateFilterCheckboxes = (containerId, options) => {
+                const container = document.getElementById(containerId);
+                container.innerHTML = '';
+                Object.entries(options).forEach(([key, value]) => {
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center';
+                    div.innerHTML = `<input id="${containerId}-${key}" name="${containerId}" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"><label for="${containerId}-${key}" class="ml-2 block text-sm text-gray-900">${value}</label>`;
+                    container.appendChild(div);
+                });
+            };
+
+            const updateStaticContent = () => {
+                const strings = uiStrings[currentLang];
+                document.querySelectorAll('[data-lang]').forEach(el => {
+                    const key = el.getAttribute('data-lang');
+                    if (strings[key]) el.textContent = strings[key];
+                });
+                document.querySelectorAll('[placeholder-lang]').forEach(el => {
+                    const key = el.getAttribute('placeholder-lang');
+                    if (strings[key]) el.placeholder = strings[key];
+                });
+
+                generateTags('industry-tags', strings.industry_tags);
+                generateTags('content-tags', strings.content_tags);
+                generateFilterCheckboxes('partner-industry-filters-modal', strings.partner_industry_filters);
+                generateFilterCheckboxes('partner-service-filters-modal', strings.partner_service_filters);
+
+                lucide.createIcons();
+            };
+            
+            const changeView = (viewName, context = {}) => {
+                currentView = viewName;
+                allViews.forEach(view => view.classList.add('hidden'));
+                const newView = document.getElementById(`${currentView}-view`);
+                if (newView) newView.classList.remove('hidden');
+                
+                backButtonContainer.style.display = currentView === 'initial' ? 'none' : 'block';
+                
+                if (viewName === 'communication') {
+                    fromQuickStart = context.fromQuickStart || false;
+                    const commPartnerNameEl = document.getElementById('comm-partner-name');
+                    if(commPartnerNameEl) commPartnerNameEl.textContent = context.partnerName || '';
+
+                    const addToListButton = document.getElementById('add-to-list-button');
+                    if (addToListButton) {
+                        const buttonTextKey = fromQuickStart ? 'add_to_cart' : 'add_to_arrangement_list';
+                        addToListButton.setAttribute('data-lang', buttonTextKey);
+                    }
+                } else if (viewName === 'case-study') {
+                    const resultsEl = document.getElementById('case-study-results');
+                    if(resultsEl) resultsEl.style.display = 'none';
+                }
+
+                updateStaticContent();
+
+                if (viewName === 'past-suppliers') populatePastSuppliersList();
+                else if (viewName === 'partner-list') populatePartnerList();
+                
+                window.scrollTo(0, 0);
+            };
+
+            viewChangers.forEach(button => {
+                button.addEventListener('click', () => changeView(button.dataset.view));
+            });
+
+            backButton.addEventListener('click', () => changeView('initial'));
+
+            langSwitcher.addEventListener('change', (e) => {
+                currentLang = e.target.value;
+                document.querySelectorAll('[data-initialized]').forEach(el => el.dataset.initialized = "");
+
+                updateStaticContent();
+                
+                if (currentView === 'case-study' && caseStudyResults.style.display !== 'none') populateCaseStudyList();
+                if (currentView === 'past-suppliers') populatePastSuppliersList();
+                if (currentView === 'partner-list') populatePartnerList();
+                if (currentView === 'ai' && !aiRecommendations.classList.contains('hidden')) populateAiRecommendations();
+            });
+
+            searchCasesButton.addEventListener('click', () => {
+                caseStudyResults.style.display = 'block';
+                populateCaseStudyList();
+            });
+
+            aiSendButton.addEventListener('click', () => {
+                const chatBox = document.getElementById('ai-chat-box'), input = document.getElementById('ai-input');
+                if(input.value.trim() !== '') {
+                    chatBox.innerHTML += `<div class="flex items-start space-x-3 justify-end"><div><p class="bg-green-100 text-green-800 rounded-lg p-3 inline-block">${input.value}</p></div><div class="p-2 bg-gray-500 text-white rounded-full flex-shrink-0"><i data-lucide="user" class="w-6 h-6"></i></div></div>`;
+                    input.value = '';
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+                setTimeout(() => {
+                    aiRecommendations.classList.remove('hidden');
+                    populateAiRecommendations();
+                }, 1000);
+            });
+            
+            favoriteFilterCheckbox.addEventListener('change', populateCaseStudyList);
+
+            const dummyPartners = [
+                { id: 1, name: 'partner_name_1', img: 'https://placehold.co/100x100/e2e8f0/475569?text=PartnerA', description: 'partner_desc_1' },
+                { id: 2, name: 'partner_name_2', img: 'https://placehold.co/100x100/e2e8f0/475569?text=PartnerB', description: 'partner_desc_2' },
+                { id: 3, name: 'partner_name_3', img: 'https://placehold.co/100x100/e2e8f0/475569?text=PartnerC', description: 'partner_desc_3' }
+            ];
+            
+            const dummyCaseStudies = [
+                { id: 101, partnerId: 1, title: 'case_title_1', img: 'https://placehold.co/300x200/a5b4fc/1e293b?text=Case1', industry: 'robot', details: { application: 'case_app_1', service: 'case_service_1', material: 'case_mat_1', lead_time: 'case_lead_1', size: '500x500x300mm' } },
+                { id: 102, partnerId: 2, title: 'case_title_2', img: 'https://placehold.co/300x200/a5b4fc/1e293b?text=Case2', industry: 'medical', details: { application: 'case_app_2', service: 'case_service_2', material: 'case_mat_2', lead_time: 'case_lead_2', size: '50x40x15mm' } },
+                { id: 103, partnerId: 1, title: 'case_title_3', img: 'https://placehold.co/300x200/a5b4fc/1e293b?text=Case3', industry: 'iot', details: { application: 'case_app_3', service: 'case_service_3', material: 'case_mat_3', lead_time: 'case_lead_3', size: '120x120x80mm' } }
+            ];
+
+            const dummyPastSuppliers = [
+                { ...dummyPartners[0], satisfaction: 5, comment: 'supplier_comment_1', author: 'author_name_1', stats: { quote: 8, order: 5, late: '1.5%', claim: '0%' } },
+                { ...dummyPartners[1], satisfaction: 3, comment: 'supplier_comment_2', author: 'author_name_2', stats: { quote: 2, order: 1, late: '0%', claim: '0%' } },
+                { ...dummyPartners[2], satisfaction: 4, comment: 'supplier_comment_3', author: 'author_name_3', stats: { quote: 12, order: 10, late: '5.0%', claim: '1.2%' } }
+            ];
+            
+            const createDetailedPartnerCardHTML = (supplier) => {
+                const strings = uiStrings[currentLang];
+                const stars = Array(5).fill(0).map((_, i) => `<i data-lucide="star" class="w-5 h-5 ${i < supplier.satisfaction ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}"></i>`).join('');
+                const partnerName = strings[supplier.name];
+                const authorName = strings[supplier.author];
+                return `
+                    <div class="border rounded-lg p-4 bg-white shadow-md">
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <img src="${supplier.img}" alt="${partnerName}" class="w-20 h-20 rounded-md object-cover flex-shrink-0">
+                            <div class="flex-grow">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="text-lg font-bold">${partnerName}</h4>
+                                    <button class="request-quote-btn self-start px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700 whitespace-nowrap" data-partner-name="${partnerName}" data-lang="request_quotation"></button>
+                                </div>
+                                <div class="flex items-center my-2">${stars}</div>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2 text-sm border-t pt-3 mt-3">
+                                    <div><dt class="font-semibold text-gray-500" data-lang="quote_実績"></dt><dd class="text-lg font-semibold">${supplier.stats.quote}${strings.times_unit}</dd></div>
+                                    <div><dt class="font-semibold text-gray-500" data-lang="order_実績"></dt><dd class="text-lg font-semibold">${supplier.stats.order}${strings.times_unit}</dd></div>
+                                    <div><dt class="font-semibold text-gray-500" data-lang="late_delivery_rate"></dt><dd class="text-lg font-semibold">${supplier.stats.late}</dd></div>
+                                    <div><dt class="font-semibold text-gray-500" data-lang="claim_rate"></dt><dd class="text-lg font-semibold">${supplier.stats.claim}</dd></div>
+                                </div>
+                                <p class="text-sm bg-gray-50 p-2 rounded-md mt-3">“${strings[supplier.comment]}”</p>
+                                <p class="text-xs text-right text-gray-500 mt-1">記入者: ${authorName} <a href="#" class="text-blue-600 hover:underline" data-lang="contact_button"></a></p>
+                            </div>
+                        </div>
+                    </div>`;
+            };
+
+            const createCaseStudyHTML = (caseStudy) => {
+                const strings = uiStrings[currentLang];
+                const partner = dummyPartners.find(p => p.id === caseStudy.partnerId);
+                const isFavorite = favoriteCases.has(caseStudy.id);
+                const partnerName = strings[partner.name];
+                return `
+                <div class="bg-white p-6 rounded-lg shadow-md" data-case-id="${caseStudy.id}">
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+                        <div class="md:col-span-2"><img src="${caseStudy.img}" alt="${strings[caseStudy.title]}" class="w-full h-auto rounded-lg object-cover"></div>
+                        <div class="md:col-span-2">
+                             <div class="flex justify-between items-start">
+                                <h4 class="text-xl font-bold">${strings[caseStudy.title]}</h4>
+                                <button class="favorite-toggle text-gray-400 hover:text-yellow-500" data-case-id="${caseStudy.id}">
+                                    <i data-lucide="star" class="${isFavorite ? 'fill-yellow-400 text-yellow-500' : ''}"></i>
+                                </button>
+                            </div>
+                            <div class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                <div class="font-semibold text-gray-500" data-lang="case_label_application"></div><div>${strings[caseStudy.details.application]}</div>
+                                <div class="font-semibold text-gray-500" data-lang="case_label_industry"></div><div>${strings.industry_tags[caseStudy.industry]}</div>
+                                <div class="font-semibold text-gray-500" data-lang="case_label_service"></div><div>${strings[caseStudy.details.service]}</div>
+                                <div class="font-semibold text-gray-500" data-lang="case_label_size"></div><div>${caseStudy.details.size}</div>
+                                <div class="font-semibold text-gray-500" data-lang="case_label_material"></div><div>${strings[caseStudy.details.material]}</div>
+                                <div class="font-semibold text-gray-500" data-lang="case_label_lead_time"></div><div>${strings[caseStudy.details.lead_time]}</div>
+                            </div>
+                        </div>
+                        <div class="border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-6 flex flex-col justify-between">
+                            <div>
+                                <h5 class="font-bold text-gray-700" data-lang="case_label_partner"></h5>
+                                <img src="${partner.img}" alt="${partnerName}" class="w-16 h-16 rounded-full my-2">
+                                <p class="font-semibold">${partnerName}</p>
+                                <p class="text-sm text-gray-600 mt-1">${strings[partner.description]}</p>
+                            </div>
+                            <button class="request-quote-btn w-full mt-4 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700" data-partner-name="${partnerName}" data-lang="request_quotation">見積依頼</button>
+                        </div>
+                    </div>
+                </div>`;
+            };
+
+            function attachDynamicEventListeners(container) {
+                container.querySelectorAll('.favorite-toggle').forEach(button => {
+                    button.onclick = (e) => {
+                        const caseId = parseInt(e.currentTarget.dataset.caseId);
+                        const icon = e.currentTarget.querySelector('i');
+                        if (favoriteCases.has(caseId)) {
+                            favoriteCases.delete(caseId);
+                            icon.classList.remove('fill-yellow-400', 'text-yellow-500');
+                        } else {
+                            favoriteCases.add(caseId);
+                            icon.classList.add('fill-yellow-400', 'text-yellow-500');
+                        }
+                        if (currentView === 'case-study' && favoriteFilterCheckbox.checked) {
+                            populateCaseStudyList();
+                        }
+                    };
+                });
+                container.querySelectorAll('.request-quote-btn').forEach(button => {
+                    button.onclick = (e) => {
+                         changeView('communication', { partnerName: e.currentTarget.dataset.partnerName });
+                    };
+                });
+                
+                const strings = uiStrings[currentLang];
+                container.querySelectorAll('[data-lang]').forEach(el => {
+                    const key = el.getAttribute('data-lang');
+                    if (strings[key]) el.textContent = strings[key];
+                });
+                
+                lucide.createIcons();
+            }
+            
+            function populateCaseStudyList() {
+                if(caseStudyResults.style.display === 'none') return;
+                const listEl = document.getElementById('case-study-list');
+                const showFavorites = favoriteFilterCheckbox.checked;
+                let filtered = showFavorites ? dummyCaseStudies.filter(cs => favoriteCases.has(cs.id)) : dummyCaseStudies;
+                listEl.innerHTML = filtered.length ? filtered.map(createCaseStudyHTML).join('') : `<p class="text-center text-gray-500 py-8">該当する事例はありません。</p>`;
+                attachDynamicEventListeners(listEl);
+            }
+            
+            function populateAiRecommendations() {
+                const container = document.getElementById('ai-recommendations');
+                container.innerHTML = `<h3 class="text-xl font-bold mb-4" data-lang="ai_recommendation_title"></h3><div class="space-y-6">${dummyPastSuppliers.slice(0, 2).map(createDetailedPartnerCardHTML).join('')}</div>`;
+                attachDynamicEventListeners(container);
+            }
+
+            function populatePartnerList() {
+                 const container = document.getElementById('partner-list-container');
+                 container.innerHTML = dummyPastSuppliers.map(createDetailedPartnerCardHTML).join('');
+                 attachDynamicEventListeners(container);
+            }
+
+            function populatePastSuppliersList() {
+                const container = document.getElementById('past-suppliers-list');
+                container.innerHTML = dummyPastSuppliers.map(createDetailedPartnerCardHTML).join('');
+                attachDynamicEventListeners(container);
+            }
+
+            const setupDragAndDrop = (zoneId) => {
+                const dropZone = document.getElementById(zoneId);
+                if (!dropZone) return;
+                const handleDrag = (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); };
+                const handleDragLeave = () => dropZone.classList.remove('drag-over');
+                const handleDrop = (e) => {
+                    e.preventDefault();
+                    handleDragLeave();
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        const fileNames = Array.from(files).map(f => f.name).join(', ');
+                        showModal('ファイルアップロード', `${fileNames} が選択されました。(このプロトタイプではアップロード処理は行われません)`, () => {});
+                    }
+                };
+                dropZone.addEventListener('dragover', handleDrag);
+                dropZone.addEventListener('dragleave', handleDragLeave);
+                dropZone.addEventListener('drop', handleDrop);
+            };
+
+            // --- 初期化 ---
+            changeView('initial');
+            setupDragAndDrop('ai-drop-zone');
+            setupDragAndDrop('case-study-drop-zone');
+        });
+    </script>
+</body>
+</html>

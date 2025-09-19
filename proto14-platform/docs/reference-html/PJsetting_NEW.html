@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proto 14 - プロジェクト設定 (New)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary-color: #2563eb; /* blue-600 */
+            --primary-hover: #1d4ed8; /* blue-700 */
+        }
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: #f8fafc;
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+        .tree-item-content {
+            transition: background-color 0.2s;
+        }
+        .tree-item-content.drag-over {
+            background-color: #a5b4fc; /* indigo-300 */
+            border: 2px dashed #4f46e5; /* indigo-600 */
+        }
+        .task-item[draggable="true"] {
+            cursor: grab;
+        }
+        .task-item[draggable="true"]:active {
+            cursor: grabbing;
+        }
+        /* Custom modal styles */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            width: 90%;
+            max-width: 500px;
+        }
+        /* For Lucide icons */
+        .icon {
+            width: 1rem;
+            height: 1rem;
+            stroke-width: 2;
+        }
+        .icon-nav {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+        .task-tag {
+            background-color: #dbeafe; /* blue-100 */
+            color: #1e40af; /* blue-800 */
+            font-size: 0.75rem;
+            padding: 0.125rem 0.25rem 0.125rem 0.5rem;
+            border-radius: 9999px;
+            margin-left: 0.5rem;
+            margin-top: 0.25rem;
+            display: inline-flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-800" data-lang-key="siteTitle">Proto 14</h1>
+            <div class="flex items-center space-x-6">
+                <!-- Navigation Icons -->
+                <nav class="flex items-center space-x-5 text-gray-500">
+                    <a href="#" class="hover:text-blue-600" data-lang-title="navList">
+                        <i data-lucide="clipboard-list" class="icon-nav"></i>
+                    </a>
+                    <a href="#" class="hover:text-blue-600" data-lang-title="navCart">
+                        <i data-lucide="shopping-cart" class="icon-nav"></i>
+                    </a>
+                    <a href="#" class="hover:text-blue-600" data-lang-title="navHistory">
+                        <i data-lucide="history" class="icon-nav"></i>
+                    </a>
+                    <a href="#" class="hover:text-blue-600" data-lang-title="navPartners">
+                        <i data-lucide="users" class="icon-nav"></i>
+                    </a>
+                    <a href="#" class="hover:text-blue-600" data-lang-title="navSettings">
+                        <i data-lucide="settings" class="icon-nav"></i>
+                    </a>
+                </nav>
+
+                <!-- Language Switcher -->
+                <div class="relative">
+                    <select id="lang-switcher" class="appearance-none bg-white border border-gray-300 rounded-md py-2 pl-3 pr-8 text-sm leading-5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <option value="ja">日本語</option>
+                        <option value="en">English</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <i data-lucide="chevron-down" class="h-4 w-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto p-6">
+        <div class="mb-4">
+            <button class="text-gray-600 hover:text-gray-900 flex items-center">
+                <i data-lucide="arrow-left" class="icon mr-1"></i>
+                <span data-lang-key="back">戻る</span>
+            </button>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-6">
+
+            <!-- Left Column -->
+            <div class="w-full md:w-2/5 flex flex-col gap-6">
+                <!-- Project Info -->
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-xl font-bold mb-4" data-lang-key="projectInfo">プロジェクト情報</h2>
+                    <form id="project-info-form" class="space-y-4">
+                        <div>
+                            <label for="product-name" class="block text-sm font-medium text-gray-700" data-lang-key="productName">製品名</label>
+                            <input type="text" id="product-name" name="product-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" data-lang-placeholder-key="productNamePlaceholder">
+                        </div>
+                        <div>
+                            <label for="project-name" class="block text-sm font-medium text-gray-700" data-lang-key="projectName">プロジェクト名</label>
+                            <input type="text" id="project-name" name="project-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" data-lang-placeholder-key="projectNamePlaceholder">
+                        </div>
+                        <div>
+                            <label for="positioning" class="block text-sm font-medium text-gray-700" data-lang-key="positioning">位置づけ</label>
+                            <select id="positioning" name="positioning" class="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm">
+                                <option data-lang-key="posPrinciple">原理試作</option>
+                                <option data-lang-key="posProduct">製品試作</option>
+                                <option data-lang-key="posMass">量産試作</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="manager" class="block text-sm font-medium text-gray-700" data-lang-key="manager">責任者</label>
+                            <select id="manager" name="manager" class="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm">
+                                <!-- Options will be generated by JS -->
+                            </select>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="button" id="reflect-btn" class="btn-primary rounded-md px-4 py-2 text-sm font-semibold shadow-sm flex items-center">
+                                <i data-lucide="brain-circuit" class="icon mr-2"></i>
+                                <span data-lang-key="reflectToStructure">プロジェクト構成へ反映</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Task Menu -->
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-xl font-bold mb-4" data-lang-key="taskMenu">タスクメニュー</h2>
+                    <div id="task-list" class="grid grid-cols-2 gap-3">
+                        <!-- Draggable task items will be injected here by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="w-full md:w-3/5 bg-white p-6 rounded-lg shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold" data-lang-key="projectStructure">プロジェクト構成</h2>
+                    <button id="toggle-edit-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md px-4 py-2 text-sm font-semibold shadow-sm flex items-center">
+                        <i data-lucide="edit" class="icon mr-2"></i>
+                        <span data-lang-key="editStructure">構成を編集</span>
+                    </button>
+                </div>
+                <div id="project-tree-container" class="border rounded-md p-4 bg-gray-50 h-full min-h-[400px]">
+                    <!-- Project tree will be rendered here by JS -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-4 mt-4 flex justify-center">
+        <button class="btn-primary rounded-md px-6 py-3 font-semibold shadow-sm flex items-center">
+            <span data-lang-key="completeAndGoToTop">設定を完了してプロジェクトTOPへ</span>
+            <i data-lucide="arrow-right" class="icon ml-2"></i>
+        </button>
+    </footer>
+
+    <!-- Modals -->
+    <div id="modal-container" class="hidden">
+        <!-- Edit Node Modal -->
+        <div id="edit-node-modal" class="modal-backdrop hidden">
+            <div class="modal-content">
+                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4" data-lang-key="modalEditTitle">名称/担当者編集</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label for="modal-edit-name" class="block text-sm font-medium text-gray-700" data-lang-key="modalName">名称</label>
+                        <input type="text" id="modal-edit-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="modal-edit-pic" class="block text-sm font-medium text-gray-700" data-lang-key="modalPIC">担当者</label>
+                         <select id="modal-edit-pic" class="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm">
+                           <!-- Options will be generated by JS -->
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" class="modal-cancel-btn bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50" data-lang-key="cancel">キャンセル</button>
+                    <button type="button" id="modal-edit-confirm" class="btn-primary py-2 px-4 rounded-md shadow-sm text-sm font-medium" data-lang-key="update">更新</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Node Modal (for child and sibling) -->
+        <div id="add-node-modal" class="modal-backdrop hidden">
+            <div class="modal-content">
+                <h3 id="add-node-modal-title" class="text-lg font-medium leading-6 text-gray-900 mb-4"></h3>
+                <div class="space-y-4">
+                     <div>
+                        <label for="modal-add-name" class="block text-sm font-medium text-gray-700" data-lang-key="modalName">名称</label>
+                        <input type="text" id="modal-add-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="modal-add-pic" class="block text-sm font-medium text-gray-700" data-lang-key="modalPIC">担当者</label>
+                         <select id="modal-add-pic" class="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm">
+                            <!-- Options will be generated by JS -->
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" class="modal-cancel-btn bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50" data-lang-key="cancel">キャンセル</button>
+                    <button type="button" id="modal-add-confirm" class="btn-primary py-2 px-4 rounded-md shadow-sm text-sm font-medium" data-lang-key="add">追加</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div id="delete-node-modal" class="modal-backdrop hidden">
+            <div class="modal-content">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <i data-lucide="alert-triangle" class="h-6 w-6 text-red-600"></i>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" data-lang-key="modalDeleteTitle">項目を削除</h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500" data-lang-key="modalDeleteConfirmMsg">本当にこの項目を削除しますか？この操作は元に戻せません。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                    <button type="button" id="modal-delete-confirm" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 sm:ml-3 sm:w-auto sm:text-sm" data-lang-key="delete">削除</button>
+                    <button type="button" class="modal-cancel-btn mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:w-auto sm:text-sm" data-lang-key="cancel">キャンセル</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- STATE MANAGEMENT ---
+        let currentLang = 'ja';
+        let isEditMode = false;
+        
+        const tasks = [
+            { id: 'task1', ja: '設計・試作', en: 'Design/Prototype' },
+            { id: 'task2', ja: '加工品', en: 'Machined Parts' },
+            { id: 'task3', ja: '規格品', en: 'Standard Parts' },
+            { id: 'task4', ja: 'Assy', en: 'Assembly' },
+            { id: 'task5', ja: 'BOM', en: 'BOM' },
+            { id: 'task6', ja: '基板', en: 'PCB' },
+            { id: 'task7', ja: 'ハーネス', en: 'Harness' },
+            { id: 'task8', ja: '包装', en: 'Packaging' },
+        ];
+        
+        const managers = [
+            { id: 'mgr1', ja: '佐藤 太郎', en: 'Taro Sato' },
+            { id: 'mgr2', ja: '鈴木 一郎', en: 'Ichiro Suzuki' },
+            { id: 'mgr3', ja: '高橋 花子', en: 'Hanako Takahashi' },
+            { id: 'mgr4', ja: '田中 次郎', en: 'Jiro Tanaka' },
+            { id: 'mgr5', ja: '伊藤 三郎', en: 'Saburo Ito' }
+        ];
+
+        const humanoidStructure = [
+            { id: 'unit_power', ja: '電源ユニット', en: 'Power Unit', children: [] },
+            { id: 'unit_control', ja: '制御ユニット', en: 'Control Unit', children: [
+                { id: 'subunit_cpu', ja: 'メインCPUサブユニット', en: 'Main CPU Sub-unit', children: [] }
+            ]},
+            { id: 'unit_comm', ja: '通信ユニット', en: 'Communication Unit', children: [] },
+            { id: 'unit_mech', ja: '機構ユニット', en: 'Mechanism Unit', children: [
+                 { id: 'subunit_arm', ja: '腕サブユニット', en: 'Arm Sub-unit', children: [] },
+                 { id: 'subunit_leg', ja: '脚サブユニット', en: 'Leg Sub-unit', children: [] },
+            ]},
+            { id: 'unit_exterior', ja: '外装ユニット', en: 'Exterior Unit', children: [] },
+            { id: 'unit_sensor', ja: 'センサーユニット', en: 'Sensor Unit', children: [] },
+            { id: 'unit_actuator', ja: 'アクチュエーターユニット', en: 'Actuator Unit', children: [] }
+        ];
+
+        const langStrings = {
+            ja: {
+                back: "戻る", siteTitle: "Proto 14", projectInfo: "プロジェクト情報", productName: "製品名",
+                projectName: "プロジェクト名", positioning: "位置づけ", manager: "責任者", reflectToStructure: "プロジェクト構成へ反映",
+                taskMenu: "タスクメニュー", projectStructure: "プロジェクト構成", editStructure: "構成を編集",
+                completeEditing: "編集を完了", completeAndGoToTop: "設定を完了してプロジェクトTOPへ", modalEditTitle: "名称/担当者編集",
+                modalAddChildTitle: "下階層に追加", modalAddSiblingTitle: "同階層に追加", modalName: "名称",
+                modalPIC: "担当者", cancel: "キャンセル", update: "更新", add: "追加", delete: "削除",
+                modalDeleteTitle: "項目を削除", modalDeleteConfirmMsg: "本当にこの項目を削除しますか？この操作は元に戻せません。",
+                posPrinciple: "原理試作", posProduct: "製品試作", posMass: "量産試作", navList: "手配品リスト",
+                navCart: "カート", navHistory: "注文履歴", navPartners: "取引先リスト", navSettings: "設定",
+                productNamePlaceholder: "例：ヒューマノイド", projectNamePlaceholder: "例：次世代モデル開発",
+                defaultProductName: "製品名未設定", defaultManagerName: "担当者未設定", unassigned: "未定", mainUnit: "メインユニット",
+            },
+            en: {
+                back: "Back", siteTitle: "Proto 14", projectInfo: "Project Information", productName: "Product Name",
+                projectName: "Project Name", positioning: "Positioning", manager: "Manager", reflectToStructure: "Reflect to Structure",
+                taskMenu: "Task Menu", projectStructure: "Project Structure", editStructure: "Edit Structure",
+                completeEditing: "Complete Editing", completeAndGoToTop: "Complete Setup & Go to TOP", modalEditTitle: "Edit Name/PIC",
+                modalAddChildTitle: "Add Child Item", modalAddSiblingTitle: "Add Sibling Item", modalName: "Name",
+                modalPIC: "Person in Charge", cancel: "Cancel", update: "Update", add: "Add", delete: "Delete",
+                modalDeleteTitle: "Delete Item", modalDeleteConfirmMsg: "Are you sure you want to delete this item? This action cannot be undone.",
+                posPrinciple: "Principle Prototype", posProduct: "Product Prototype", posMass: "Mass Production Prototype",
+                navList: "Parts List", navCart: "Cart", navHistory: "Order History", navPartners: "Partners List", navSettings: "Settings",
+                productNamePlaceholder: "e.g., Humanoid", projectNamePlaceholder: "e.g., Next-Gen Model Development",
+                defaultProductName: "Product Name Not Set", defaultManagerName: "Manager Not Set", unassigned: "Unassigned", mainUnit: "Main Unit",
+            }
+        };
+
+        let projectData = {
+            id: 'root',
+            name: langStrings.ja.defaultProductName,
+            pic: langStrings.ja.defaultManagerName,
+            tasks: [],
+            children: []
+        };
+        
+        // --- DOM ELEMENTS ---
+        const treeContainer = document.getElementById('project-tree-container');
+        const toggleEditBtn = document.getElementById('toggle-edit-btn');
+        const reflectBtn = document.getElementById('reflect-btn');
+        const taskListContainer = document.getElementById('task-list');
+        const langSwitcher = document.getElementById('lang-switcher');
+
+        // --- LANGUAGE & UI UPDATES ---
+        function updateUIText() {
+            const oldLang = currentLang === 'ja' ? 'en' : 'ja';
+            if (projectData.name === langStrings[oldLang].defaultProductName) {
+                projectData.name = langStrings[currentLang].defaultProductName;
+            }
+            if (projectData.pic === langStrings[oldLang].defaultManagerName) {
+                projectData.pic = langStrings[currentLang].defaultManagerName;
+            }
+
+            document.querySelectorAll('[data-lang-key]').forEach(el => {
+                const key = el.dataset.langKey;
+                if (langStrings[currentLang][key]) el.innerText = langStrings[currentLang][key];
+            });
+            document.querySelectorAll('[data-lang-title]').forEach(el => {
+                const key = el.dataset.langTitle;
+                if (langStrings[currentLang][key]) el.title = langStrings[currentLang][key];
+            });
+            document.querySelectorAll('[data-lang-placeholder-key]').forEach(el => {
+                const key = el.dataset.langPlaceholderKey;
+                if (langStrings[currentLang][key]) el.placeholder = langStrings[currentLang][key];
+            });
+            renderManagerOptions();
+            renderTaskList();
+            renderTree();
+        }
+        
+        function renderManagerOptions() {
+            const selects = [document.getElementById('manager'), document.getElementById('modal-edit-pic'), document.getElementById('modal-add-pic')];
+            selects.forEach(select => {
+                if (select) {
+                    const selectedValue = select.value;
+                    select.innerHTML = '';
+                    managers.forEach(mgr => {
+                        const option = document.createElement('option');
+                        option.value = mgr[currentLang];
+                        option.textContent = mgr[currentLang];
+                        select.appendChild(option);
+                    });
+                    select.value = selectedValue;
+                }
+            });
+        }
+
+        function renderTaskList() {
+            taskListContainer.innerHTML = '';
+            tasks.forEach(task => {
+                const taskEl = document.createElement('div');
+                taskEl.id = task.id;
+                taskEl.className = 'task-item bg-blue-100 border border-blue-200 text-blue-800 text-sm font-medium p-2 rounded-md text-center shadow-sm';
+                taskEl.innerText = task[currentLang];
+                taskEl.draggable = !isEditMode;
+                taskEl.addEventListener('dragstart', (e) => {
+                    if(isEditMode) return;
+                    e.dataTransfer.setData('text/plain', task.id);
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+                taskListContainer.appendChild(taskEl);
+            });
+        }
+        
+        function renderTree() {
+            treeContainer.innerHTML = '';
+            treeContainer.appendChild(createNodeElement(projectData, 0));
+            lucide.createIcons();
+        }
+
+        function createNodeElement(node, level) {
+            const nodeWrapper = document.createElement('div');
+            nodeWrapper.className = 'ml-' + (level * 4);
+            const nodeContent = document.createElement('div');
+            nodeContent.className = 'tree-item-content flex items-center justify-between p-2 rounded-md hover:bg-gray-100';
+            nodeContent.dataset.nodeId = node.id;
+            if (!isEditMode) {
+                 nodeContent.addEventListener('dragover', (e) => { e.preventDefault(); nodeContent.classList.add('drag-over'); });
+                 nodeContent.addEventListener('dragleave', () => { nodeContent.classList.remove('drag-over'); });
+                 nodeContent.addEventListener('drop', handleDrop);
+            }
+            const nodeInfo = document.createElement('div');
+            const nodeName = document.createElement('span');
+            nodeName.className = 'font-semibold text-gray-700';
+            nodeName.textContent = node.name;
+            const nodePIC = document.createElement('span');
+            nodePIC.className = 'text-sm text-gray-500 block';
+            nodePIC.textContent = `PIC: ${node.pic}`;
+            nodeInfo.appendChild(nodeName);
+            nodeInfo.appendChild(nodePIC);
+            const taskTagsContainer = document.createElement('div');
+            taskTagsContainer.className = 'flex flex-wrap items-center';
+            node.tasks.forEach(taskId => {
+                const task = tasks.find(t => t.id === taskId);
+                if(task){
+                    const tag = document.createElement('span');
+                    tag.className = 'task-tag';
+                    tag.innerHTML = `<span>${task[currentLang]}</span>
+                        ${!isEditMode ? `<button class="remove-task-btn ml-1.5 p-0.5 leading-none rounded-full text-blue-500 hover:bg-blue-200" data-task-id="${taskId}" title="${langStrings[currentLang].delete}">&times;</button>` : ''}`;
+                    taskTagsContainer.appendChild(tag);
+                }
+            });
+            const leftSide = document.createElement('div');
+            leftSide.appendChild(nodeInfo);
+            leftSide.appendChild(taskTagsContainer);
+            nodeContent.appendChild(leftSide);
+            if (isEditMode) {
+                const buttonGroup = document.createElement('div');
+                buttonGroup.className = 'flex items-center space-x-2';
+                buttonGroup.innerHTML = `<button class="edit-btn p-1 text-gray-500 hover:text-blue-600" title="${langStrings[currentLang].modalEditTitle}"><i data-lucide="pencil" class="icon"></i></button>
+                    <button class="add-child-btn p-1 text-gray-500 hover:text-green-600" title="${langStrings[currentLang].modalAddChildTitle}"><i data-lucide="folder-plus" class="icon"></i></button>
+                    ${node.id !== 'root' ? `<button class="add-sibling-btn p-1 text-gray-500 hover:text-purple-600" title="${langStrings[currentLang].modalAddSiblingTitle}"><i data-lucide="plus-square" class="icon"></i></button>` : ''}
+                    ${node.id !== 'root' ? `<button class="delete-btn p-1 text-gray-500 hover:text-red-600" title="${langStrings[currentLang].delete}"><i data-lucide="trash-2" class="icon"></i></button>` : ''}`;
+                nodeContent.appendChild(buttonGroup);
+            }
+            nodeWrapper.appendChild(nodeContent);
+            if (node.children && node.children.length > 0) {
+                const childrenContainer = document.createElement('div');
+                node.children.forEach(child => { childrenContainer.appendChild(createNodeElement(child, level + 1)); });
+                nodeWrapper.appendChild(childrenContainer);
+            }
+            return nodeWrapper;
+        }
+
+        // --- DATA HELPERS ---
+        function findNode(id, node = projectData) {
+            if (node.id === id) return node;
+            for (const child of node.children) {
+                const found = findNode(id, child);
+                if (found) return found;
+            }
+            return null;
+        }
+        function findParentNode(childId, node = projectData) {
+            for (const child of node.children) {
+                if (child.id === childId) return node;
+                const found = findParentNode(childId, child);
+                if (found) return found;
+            }
+            return null;
+        }
+
+        // --- EVENT HANDLERS ---
+        langSwitcher.addEventListener('change', (e) => {
+            currentLang = e.target.value;
+            updateUIText();
+        });
+
+        toggleEditBtn.addEventListener('click', () => {
+            isEditMode = !isEditMode;
+            const iconName = isEditMode ? 'check-circle' : 'edit';
+            const textKey = isEditMode ? 'completeEditing' : 'editStructure';
+            toggleEditBtn.innerHTML = `<i data-lucide="${iconName}" class="icon mr-2"></i><span data-lang-key="${textKey}">${langStrings[currentLang][textKey]}</span>`;
+            renderTaskList();
+            renderTree();
+        });
+
+        reflectBtn.addEventListener('click', () => {
+            const productName = document.getElementById('product-name').value;
+            const manager = document.getElementById('manager').value;
+            projectData.name = productName || langStrings[currentLang].defaultProductName;
+            projectData.pic = manager || managers[0][currentLang];
+
+            if (productName && (productName.includes('ヒューマノイド') || productName.toLowerCase().includes('humanoid'))) {
+                 const buildStructure = (structureTemplate, managerIndex = 0) => {
+                    return structureTemplate.map((item, i) => {
+                        const newManagerIndex = (managerIndex + i) % managers.length;
+                        return {
+                            id: item.id,
+                            name: item[currentLang],
+                            pic: managers[newManagerIndex][currentLang],
+                            tasks: [],
+                            children: item.children ? buildStructure(item.children, newManagerIndex + 1) : []
+                        };
+                    });
+                 };
+                 projectData.children = buildStructure(humanoidStructure);
+            } else if (productName) {
+                projectData.children = [{ id: 'unit_default_1', name: langStrings[currentLang].mainUnit, pic: langStrings[currentLang].unassigned, tasks: [], children: [] }];
+            } else { projectData.children = []; }
+            renderTree();
+        });
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            const draggedTaskId = e.dataTransfer.getData('text/plain');
+            const targetNodeId = e.currentTarget.dataset.nodeId;
+            const targetNode = findNode(targetNodeId);
+            if (targetNode && draggedTaskId && !targetNode.tasks.includes(draggedTaskId)) {
+                targetNode.tasks.push(draggedTaskId);
+                renderTree();
+            }
+        }
+        
+        treeContainer.addEventListener('click', (e) => {
+            const button = e.target.closest('button');
+            if(!button) return;
+            const nodeContent = button.closest('.tree-item-content');
+            const nodeId = nodeContent ? nodeContent.dataset.nodeId : null;
+            if (button.classList.contains('edit-btn')) {
+                const node = findNode(nodeId);
+                document.getElementById('modal-edit-name').value = node.name;
+                document.getElementById('modal-edit-pic').value = node.pic;
+                showModal('edit', () => { node.name = document.getElementById('modal-edit-name').value; node.pic = document.getElementById('modal-edit-pic').value; });
+            } else if (button.classList.contains('add-child-btn')) {
+                const parentNode = findNode(nodeId);
+                document.getElementById('add-node-modal-title').innerText = langStrings[currentLang].modalAddChildTitle;
+                document.getElementById('modal-add-name').value = '';
+                showModal('add', () => { parentNode.children.push({ id: 'node-' + Date.now(), name: document.getElementById('modal-add-name').value, pic: document.getElementById('modal-add-pic').value, tasks: [], children: [] }); });
+            } else if (button.classList.contains('add-sibling-btn')) {
+                const parentNode = findParentNode(nodeId);
+                document.getElementById('add-node-modal-title').innerText = langStrings[currentLang].modalAddSiblingTitle;
+                document.getElementById('modal-add-name').value = '';
+                 showModal('add', () => { parentNode.children.push({ id: 'node-' + Date.now(), name: document.getElementById('modal-add-name').value, pic: document.getElementById('modal-add-pic').value, tasks: [], children: [] }); });
+            } else if (button.classList.contains('delete-btn')) {
+                 showModal('delete', () => { const parentNode = findParentNode(nodeId); parentNode.children = parentNode.children.filter(child => child.id !== nodeId); });
+            } else if (button.classList.contains('remove-task-btn') && !isEditMode) {
+                const taskId = button.dataset.taskId;
+                const node = findNode(nodeId);
+                if (node) { node.tasks = node.tasks.filter(id => id !== taskId); renderTree(); }
+            }
+        });
+
+        // --- Modal Logic ---
+        const modalContainer = document.getElementById('modal-container');
+        const modals = { edit: document.getElementById('edit-node-modal'), add: document.getElementById('add-node-modal'), delete: document.getElementById('delete-node-modal') };
+        let activeModal = null; let onConfirmCallback = null;
+        function showModal(type, onConfirm) { modalContainer.classList.remove('hidden'); activeModal = modals[type]; activeModal.classList.remove('hidden'); onConfirmCallback = onConfirm; }
+        function hideModal() { if(activeModal) activeModal.classList.add('hidden'); modalContainer.classList.add('hidden'); onConfirmCallback = null; }
+        modalContainer.addEventListener('click', (e) => { if (e.target.classList.contains('modal-backdrop') || e.target.closest('.modal-cancel-btn')) { hideModal(); } });
+        document.getElementById('modal-edit-confirm').addEventListener('click', () => { if (onConfirmCallback) onConfirmCallback(); hideModal(); renderTree(); });
+        document.getElementById('modal-add-confirm').addEventListener('click', () => { if (onConfirmCallback) onConfirmCallback(); hideModal(); renderTree(); });
+        document.getElementById('modal-delete-confirm').addEventListener('click', () => { if (onConfirmCallback) onConfirmCallback(); hideModal(); renderTree(); });
+        
+        // --- INITIALIZATION ---
+        updateUIText();
+    });
+    </script>
+</body>
+</html>

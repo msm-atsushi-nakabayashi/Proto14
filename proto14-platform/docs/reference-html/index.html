@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proto 14 - GroundTOP_2025091404</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: #f8fafc; /* cool-gray-50 */
+        }
+        .modal-overlay {
+            transition: opacity 0.3s ease;
+        }
+        .modal-container {
+            transition: transform 0.3s ease;
+        }
+        /* meviy marketplaceを参考にしたボタンスタイル */
+        .btn-primary {
+            @apply bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition-colors duration-300;
+        }
+        .btn-secondary {
+            @apply bg-white text-gray-700 font-bold py-2 px-4 rounded-md border border-gray-300 hover:bg-gray-50 transition-colors duration-300;
+        }
+        .status-badge {
+            @apply px-2.5 py-0.5 text-xs font-medium rounded-full;
+        }
+        .header-nav-item {
+            @apply flex items-center space-x-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- ヘッダー -->
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <h1 class="text-2xl font-bold text-gray-900">Proto 14</h1>
+                <div class="flex items-center space-x-6">
+                    <!-- ヘッダーナビゲーション -->
+                    <nav class="flex items-center space-x-6">
+                        <a href="#" class="header-nav-item">
+                            <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+                            <span data-lang-key="header_parts_list">手配品リスト</span>
+                        </a>
+                        <a href="#" class="header-nav-item">
+                            <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+                            <span data-lang-key="header_cart">カート</span>
+                        </a>
+                        <a href="#" class="header-nav-item">
+                            <i data-lucide="history" class="w-5 h-5"></i>
+                            <span data-lang-key="header_order_history">注文履歴</span>
+                        </a>
+                        <a href="#" class="header-nav-item">
+                            <i data-lucide="users" class="w-5 h-5"></i>
+                            <span data-lang-key="header_supplier_list">取引先リスト</span>
+                        </a>
+                        <a href="#" class="header-nav-item">
+                            <i data-lucide="settings" class="w-5 h-5"></i>
+                            <span data-lang-key="header_settings">設定</span>
+                        </a>
+                    </nav>
+                    <!-- 言語切替 -->
+                    <div class="relative">
+                        <button id="lang-toggle" class="flex items-center space-x-2 text-sm font-medium text-gray-600 hover:text-gray-900">
+                            <i data-lucide="globe" class="w-4 h-4"></i>
+                            <span id="lang-text">日本語</span>
+                            <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- クイックスタートセクション -->
+        <section id="quick-start-section" class="mb-12">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800" data-lang-key="quick_start_title">クイックスタート</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
+                <!-- カードはJavaScriptで生成 -->
+            </div>
+        </section>
+
+        <!-- プロジェクトダッシュボードセクション -->
+        <section id="project-dashboard-section">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-800" data-lang-key="dashboard_title">プロジェクトダッシュボード</h2>
+                <button id="create-project-btn" class="btn-primary" data-lang-key="create_project_btn">
+                    新規プロジェクト作成
+                </button>
+            </div>
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="th_product_name">製品名</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="th_project_name">プロジェクト名</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="th_manager">責任者</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="th_status">ステータス</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="th_last_updated">最終更新日</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="th_actions">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="project-table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- プロジェクトデータはJavaScriptで挿入 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- カスタムモーダル -->
+    <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div id="modal-overlay" class="absolute inset-0 bg-black bg-opacity-50"></div>
+        <div id="modal-container" class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 transform scale-95">
+            <div class="p-6">
+                <h3 id="modal-title" class="text-xl font-bold text-gray-900 mb-4"></h3>
+                <p id="modal-content" class="text-gray-600 mb-6"></p>
+                <div class="flex justify-end space-x-4">
+                    <button id="modal-cancel-btn" class="btn-secondary"></button>
+                    <button id="modal-ok-btn" class="btn-primary"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- データ定義 ---
+            const translations = {
+                ja: {
+                    lang_name: '日本語',
+                    header_parts_list: '手配品リスト',
+                    header_cart: 'カート',
+                    header_order_history: '注文履歴',
+                    header_supplier_list: '取引先リスト',
+                    header_settings: '設定',
+                    quick_start_title: 'クイックスタート',
+                    dashboard_title: 'プロジェクトダッシュボード',
+                    create_project_btn: '新規プロジェクト作成',
+                    th_product_name: '製品名',
+                    th_project_name: 'プロジェクト名',
+                    th_manager: '責任者',
+                    th_status: 'ステータス',
+                    th_last_updated: '最終更新日',
+                    th_actions: '操作',
+                    action_pj_top: 'PJ TOP',
+                    action_settings: '設定',
+                    modal_create_project_title: 'プロジェクト作成',
+                    modal_create_project_content: 'ここに新規プロジェクト作成のフォームが表示されます。これはプロトタイプです。',
+                    modal_cancel: 'キャンセル',
+                    modal_ok: 'OK',
+                    status_estimating: '見積中',
+                    status_procuring: '調達中',
+                    status_delivered: '納品済',
+                },
+                en: {
+                    lang_name: 'English',
+                    header_parts_list: 'Parts List',
+                    header_cart: 'Cart',
+                    header_order_history: 'Order History',
+                    header_supplier_list: 'Supplier List',
+                    header_settings: 'Settings',
+                    quick_start_title: 'Quick Start',
+                    dashboard_title: 'Project Dashboard',
+                    create_project_btn: 'Create New Project',
+                    th_product_name: 'Product Name',
+                    th_project_name: 'Project Name',
+                    th_manager: 'Manager',
+                    th_status: 'Status',
+                    th_last_updated: 'Last Updated',
+                    th_actions: 'Actions',
+                    action_pj_top: 'PJ TOP',
+                    action_settings: 'Settings',
+                    modal_create_project_title: 'Create Project',
+                    modal_create_project_content: 'A form for creating a new project will be displayed here. This is a prototype.',
+                    modal_cancel: 'Cancel',
+                    modal_ok: 'OK',
+                    status_estimating: 'Estimating',
+                    status_procuring: 'Procuring',
+                    status_delivered: 'Delivered',
+                }
+            };
+
+            const quickStartItems = [
+                { key: 'standard_parts', icon: 'search' },
+                { key: 'processed_goods', icon: 'gem' },
+                { key: 'bom', icon: 'file-spreadsheet' },
+                { key: 'assy', icon: 'component' },
+                { key: 'design_prototype', icon: 'drafting-compass' },
+                { key: 'circuit_board', icon: 'memory-stick' },
+                { key: 'harness', icon: 'cable' },
+                { key: 'packaging', icon: 'box' },
+            ];
+
+            const quickStartItemTranslations = {
+                 ja: {
+                    standard_parts: '規格品',
+                    processed_goods: '加工品',
+                    bom: 'BOM',
+                    assy: 'Assy',
+                    design_prototype: '設計・試作',
+                    circuit_board: '基板',
+                    harness: 'ハーネス',
+                    packaging: '包装',
+                },
+                en: {
+                    standard_parts: 'Standard Parts',
+                    processed_goods: 'Processed Goods',
+                    bom: 'BOM',
+                    assy: 'Assy',
+                    design_prototype: 'Design/Prototype',
+                    circuit_board: 'Circuit Board',
+                    harness: 'Harness',
+                    packaging: 'Packaging',
+                }
+            }
+
+            const projects = [
+                { id: 1, product: { ja: '搬送装置A', en: 'Conveyor Unit A' }, project: { ja: '次世代モデル開発', en: 'Next-gen Model Dev' }, manager: { ja: '佐藤 太郎', en: 'Taro Sato' }, status: 'procuring', updated: '2025-09-13' },
+                { id: 2, product: { ja: '検査ユニットB', en: 'Inspection Unit B' }, project: { ja: '性能改善プロジェクト', en: 'Performance Improvement' }, manager: { ja: '鈴木 一郎', en: 'Ichiro Suzuki' }, status: 'estimating', updated: '2025-09-12' },
+                { id: 3, product: { ja: '制御ボックスC', en: 'Control Box C' }, project: { ja: 'コストダウン試作', en: 'Cost Reduction Proto' }, manager: { ja: '高橋 花子', en: 'Hanako Takahashi' }, status: 'delivered', updated: '2025-09-10' },
+                { id: 4, product: { ja: 'ロボットアームD', en: 'Robot Arm D' }, project: { ja: '新規導入案件', en: 'New Installation Project' }, manager: { ja: '田中 誠', en: 'Makoto Tanaka' }, status: 'estimating', updated: '2025-09-14' },
+            ];
+
+            // --- 初期化 ---
+            let currentLang = 'ja';
+
+            const langToggle = document.getElementById('lang-toggle');
+            const langText = document.getElementById('lang-text');
+            const quickStartGrid = document.querySelector('#quick-start-section .grid');
+            const projectTableBody = document.getElementById('project-table-body');
+            const createProjectBtn = document.getElementById('create-project-btn');
+
+            // --- モーダル関連要素 ---
+            const modal = document.getElementById('modal');
+            const modalOverlay = document.getElementById('modal-overlay');
+            const modalContainer = document.getElementById('modal-container');
+            const modalTitle = document.getElementById('modal-title');
+            const modalContent = document.getElementById('modal-content');
+            const modalCancelBtn = document.getElementById('modal-cancel-btn');
+            const modalOkBtn = document.getElementById('modal-ok-btn');
+
+            // --- 関数定義 ---
+            const switchLanguage = (lang) => {
+                currentLang = lang;
+                langText.textContent = translations[lang].lang_name;
+                
+                document.querySelectorAll('[data-lang-key]').forEach(el => {
+                    const key = el.dataset.langKey;
+                    if (translations[lang][key]) {
+                        el.textContent = translations[lang][key];
+                    }
+                });
+                
+                renderQuickStart();
+                renderProjects();
+                lucide.createIcons(); // アイコン再描画
+            };
+
+            const renderQuickStart = () => {
+                quickStartGrid.innerHTML = '';
+                quickStartItems.forEach(item => {
+                    const card = document.createElement('a');
+                    card.href = '#';
+                    card.className = 'block p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow text-center';
+                    card.innerHTML = `
+                        <div class="flex justify-center items-center mb-2">
+                           <i data-lucide="${item.icon}" class="w-8 h-8 text-blue-600"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-700">${quickStartItemTranslations[currentLang][item.key]}</span>
+                    `;
+                    card.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        console.log(`Navigating to ${quickStartItemTranslations[currentLang][item.key]} page.`);
+                    });
+                    quickStartGrid.appendChild(card);
+                });
+            };
+
+            const getStatusBadge = (status) => {
+                const statusText = translations[currentLang][`status_${status}`] || status;
+                switch (status) {
+                    case 'estimating':
+                        return `<span class="status-badge bg-yellow-100 text-yellow-800">${statusText}</span>`;
+                    case 'procuring':
+                        return `<span class="status-badge bg-blue-100 text-blue-800">${statusText}</span>`;
+                    case 'delivered':
+                        return `<span class="status-badge bg-green-100 text-green-800">${statusText}</span>`;
+                    default:
+                        return `<span class="status-badge bg-gray-100 text-gray-800">${statusText}</span>`;
+                }
+            };
+
+            const renderProjects = () => {
+                projectTableBody.innerHTML = '';
+                projects.forEach(p => {
+                    const row = document.createElement('tr');
+                    row.className = "hover:bg-gray-50";
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${p.product[currentLang]}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${p.project[currentLang]}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${p.manager[currentLang]}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${getStatusBadge(p.status)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${p.updated}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                            <button class="text-blue-600 hover:text-blue-800" onclick="console.log('Navigate to PJ TOP for project ${p.id}')">${translations[currentLang].action_pj_top}</button>
+                            <button class="text-blue-600 hover:text-blue-800" onclick="console.log('Navigate to Settings for project ${p.id}')">${translations[currentLang].action_settings}</button>
+                        </td>
+                    `;
+                    projectTableBody.appendChild(row);
+                });
+            };
+
+            // モーダル表示
+            const showModal = () => {
+                modalTitle.textContent = translations[currentLang].modal_create_project_title;
+                modalContent.textContent = translations[currentLang].modal_create_project_content;
+                modalCancelBtn.textContent = translations[currentLang].modal_cancel;
+                modalOkBtn.textContent = translations[currentLang].modal_ok;
+                
+                modal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+                setTimeout(() => {
+                   modalOverlay.classList.remove('opacity-0');
+                   modalContainer.classList.remove('scale-95');
+                }, 10);
+            };
+
+            // モーダル非表示
+            const hideModal = () => {
+                modalOverlay.classList.add('opacity-0');
+                modalContainer.classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    document.body.classList.remove('overflow-hidden');
+                }, 300);
+            };
+
+
+            // --- イベントリスナー ---
+            langToggle.addEventListener('click', () => {
+                const newLang = currentLang === 'ja' ? 'en' : 'ja';
+                switchLanguage(newLang);
+            });
+
+            createProjectBtn.addEventListener('click', showModal);
+            modalOverlay.addEventListener('click', hideModal);
+            modalCancelBtn.addEventListener('click', hideModal);
+            modalOkBtn.addEventListener('click', () => {
+                console.log('OK button clicked on modal.');
+                hideModal();
+            });
+
+            // --- 初期描画 ---
+            switchLanguage(currentLang); // 初期言語で描画
+        });
+    </script>
+</body>
+</html>
