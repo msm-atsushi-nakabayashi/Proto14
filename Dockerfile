@@ -5,7 +5,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # package.jsonとpackage-lock.jsonをコピー
-COPY package*.json ./
+COPY proto14-platform/package*.json ./
 RUN npm ci --only=production
 
 # Stage 2: Builder
@@ -13,10 +13,10 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # 依存関係をインストール（devDependenciesを含む）
-COPY package*.json ./
+COPY proto14-platform/package*.json ./
 RUN npm ci
 
-COPY . .
+COPY proto14-platform/ .
 
 # Next.jsの静的ファイルをビルド
 ENV NEXT_TELEMETRY_DISABLED 1
